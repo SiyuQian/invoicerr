@@ -53,7 +53,10 @@ function expectSameLineOverlays(file: (typeof ALL_COUNTRY_FIELD_OVERLAY_FILES)[n
     .find((o) => o.typeId === 'invoice')!
     .operations.filter((op) => op.path === 'lines');
   for (const overlay of file.overlays.filter((o) => o.typeId !== 'invoice')) {
-    expect(overlay.operations, overlay.typeId).toEqual(invoiceLineOps);
+    expect(
+      overlay.operations.filter((op) => op.path === 'lines'),
+      overlay.typeId,
+    ).toEqual(invoiceLineOps);
   }
 }
 
@@ -63,6 +66,7 @@ describe('country-fields/data — five countries ship a real overlay', () => {
       'DE',
       'FR',
       'IT',
+      'NZ',
       'PL',
       'PT',
     ]);

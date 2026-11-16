@@ -6,10 +6,18 @@ import { paypalPaymentMethod } from './paypal.descriptor';
 import { stripePaymentMethod } from './stripe.descriptor';
 
 describe('BUILT_IN_PAYMENT_METHODS', () => {
-  it('ships exactly six methods, each a distinct, non-empty id', () => {
+  it('ships exactly seven methods, each a distinct, non-empty id', () => {
     const ids = BUILT_IN_PAYMENT_METHODS.map((m) => m.id);
-    expect(ids).toEqual(['bank_transfer', 'paypal', 'cash', 'cheque', 'stripe', 'mollie']);
-    expect(new Set(ids).size).toBe(6);
+    expect(ids).toEqual([
+      'bank_transfer',
+      'bank_transfer_nz',
+      'paypal',
+      'cash',
+      'cheque',
+      'stripe',
+      'mollie',
+    ]);
+    expect(new Set(ids).size).toBe(7);
   });
 });
 

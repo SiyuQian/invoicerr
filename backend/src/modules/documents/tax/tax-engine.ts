@@ -136,6 +136,7 @@ export function determineLineTax(
   }
 
   // --- VAT / GST world ---
+  if (sys.crossBorderTreatment === 'declared') return domesticVat(line, sys, supplier);
   // 1. Domestic.
   if (sameCountry) return domesticVat(line, sys, supplier);
 
@@ -239,7 +240,7 @@ function domesticVat(line: DocumentLine, sys: VatSystemSpec, supplier: PartyTaxP
     return treatment(
       {
         taxSystem: sys.kind,
-        name: 'VAT',
+        name: sys.kind,
         category: 'E',
         rate: 0,
         jurisdiction: supplier.countryCode,
@@ -254,7 +255,7 @@ function domesticVat(line: DocumentLine, sys: VatSystemSpec, supplier: PartyTaxP
     return treatment(
       {
         taxSystem: sys.kind,
-        name: 'VAT',
+        name: sys.kind,
         category: 'E',
         rate: 0,
         jurisdiction: supplier.countryCode,
@@ -270,7 +271,7 @@ function domesticVat(line: DocumentLine, sys: VatSystemSpec, supplier: PartyTaxP
   return treatment(
     {
       taxSystem: sys.kind,
-      name: 'VAT',
+      name: sys.kind,
       category,
       rate,
       jurisdiction: supplier.countryCode,

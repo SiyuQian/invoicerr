@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { DocumentField } from "@/components/documents/document-field"
-import { buildZodSchema, defaultValuesFor } from "@/components/documents/schema"
+import { defaultValuesFor } from "@/components/documents/schema"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -18,6 +18,7 @@ import {
 import { Form } from "@/components/ui/form"
 import { useUpdatePaymentMethod } from "@/hooks/queries"
 import type { PaymentMethodConfig } from "@/types/payment-method"
+import { buildPaymentMethodConfigSchema } from "./payment-method-config-schema"
 
 interface PaymentMethodConfigDialogProps {
   method: PaymentMethodConfig
@@ -56,7 +57,10 @@ export function PaymentMethodConfigDialog({
   const updateMethod = useUpdatePaymentMethod()
 
   const fields = useMemo(() => method.fields, [method.fields])
-  const schema = useMemo(() => buildZodSchema(fields), [fields])
+  const schema = useMemo(
+    () => buildPaymentMethodConfigSchema({ id: method.id, fields }, t),
+    [method.id, fields, t],
+  )
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: { ...defaultValuesFor(fields), ...method.config },

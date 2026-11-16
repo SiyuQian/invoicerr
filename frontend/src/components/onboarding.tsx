@@ -11,7 +11,9 @@ import type { Company } from "@/types"
 import CountryReadinessAlert from "@/components/country-readiness-alert"
 import CountrySelect from "@/components/country-select"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
+import { currencyForCountry } from "@/lib/reference/countries"
 import { typeErrors } from "@/lib/zod-messages"
 import { toast } from "sonner"
 import { useForm } from "react-hook-form"
@@ -105,6 +107,7 @@ export default function OnBoarding({
       .max(100, t("settings.company.form.company.errors.maxLength")),
     country: z.string().min(1, t("settings.company.form.country.errors.empty")),
     countryCode: z.string().optional(),
+    exemptVat: z.boolean().optional(),
     // Left optional on purpose — the onboarding form only ever asked for
     // name + country; these are a bonus the company-lookup pre-fill can now
     // populate, not a new requirement to clear before a company can be created.
@@ -121,6 +124,7 @@ export default function OnBoarding({
       name: "",
       country: "",
       countryCode: "",
+      exemptVat: false,
       address: "",
       postalCode: "",
       city: "",
@@ -292,6 +296,10 @@ export default function OnBoarding({
     try {
       const payload = {
         ...values,
+        exemptVat: requiredIdentifiersResult?.taxKind === "GST" && !!values.exemptVat,
+        ...(requiredIdentifiersResult?.taxKind === "GST"
+          ? { currency: currencyForCountry(values.countryCode) }
+          : {}),
         identifiers: (values.identifiers || []).filter((i) => i.value.trim() !== ""),
       }
       const created = await trigger(payload)
@@ -612,6 +620,28 @@ export default function OnBoarding({
                   )}
                 />
               </div>
+
+              {requiredIdentifiersResult?.taxKind === "GST" && (
+                <FormField
+                  control={form.control}
+                  name="exemptVat"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel description={t("settings.company.form.gstNotRegistered.description")}>
+                        {t("settings.company.form.gstNotRegistered.label")}
+                      </FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={!!field.value}
+                          onCheckedChange={field.onChange}
+                          data-cy="onboarding-gst-unregistered-switch"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {requiredIdentifiers?.filter((r) => r.scheme !== "LEGAL_ID").length ? (
                 <div className="space-y-4 border rounded-lg p-4 bg-muted/30">

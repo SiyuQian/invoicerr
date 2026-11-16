@@ -7,6 +7,27 @@
  */
 import { validateDeVat, validateFrVat, validateItVat, validateVat } from './vat-syntax';
 
+describe('NZ GST numbers', () => {
+  it.each([
+    '49-091-850',
+    '049091850',
+    'NZ049091850',
+    '150000017',
+  ])('accepts checksum-valid %s, including the 2026 expanded range', (value) => {
+    expect(validateVat(value, 'NZ')).toMatchObject({ valid: true, checksumValidated: true });
+  });
+  it.each([
+    '49091851',
+    '000000000',
+    '999999999',
+    'GST123',
+    '9429041900253',
+    '100000001',
+  ])('rejects malformed, out-of-range or bad-checksum %s', (value) => {
+    expect(validateVat(value, 'NZ').valid).toBe(false);
+  });
+});
+
 describe('vat-syntax — validateFrVat', () => {
   it('accepts a real, checksum-valid FR VAT number (FR83404833048 — SIREN 404833048)', () => {
     // key = (12 + 3 × (404833048 mod 97)) mod 97 — computed once, then locked in as a fixture.

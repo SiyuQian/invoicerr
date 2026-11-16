@@ -24,6 +24,13 @@ const findRequirements = prisma.countryIdentifierRequirement.findMany as Mock;
 describe('resolveRequiredIdentifiers', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('exposes GST terminology for onboarding and company settings from the country tax system', async () => {
+    findRequirements.mockResolvedValue([
+      { scheme: 'VAT', label: 'GST number', appliesTo: 'BOTH', requiredFor: [] },
+    ]);
+    expect(await resolveRequiredIdentifiers('NZ', 'COMPANY')).toMatchObject({ taxKind: 'GST' });
+  });
+
   // DECISION, proven directly: a country with NO rows at all declares NO requirements — no
   // invented default — but SAYS so, exactly the "a country with no file has no declared
   // requirement, and says so" requirement this whole module exists to satisfy. If someone changes the

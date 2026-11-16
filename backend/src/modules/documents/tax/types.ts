@@ -150,6 +150,7 @@ export interface TransactionContext {
 
 export interface VatSystemSpec {
   kind: 'VAT' | 'GST';
+  crossBorderTreatment?: 'declared';
   standardRate: number;
   reducedRates: number[];
   schemes: TaxScheme[];

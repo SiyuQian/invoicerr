@@ -126,7 +126,10 @@ function setup(
         "GET /api/company/currency-rates": [],
         "GET /api/company/currency-rates/gaps": [],
         "GET /api/documents/transports": [],
-        "GET /api/documents/required-identifiers": { requirements: [] },
+        "GET /api/documents/required-identifiers": {
+          requirements: [],
+          ...(company.countryCode === "NZ" ? { taxKind: "GST" } : {}),
+        },
         "GET /api/documents/company-law": { legalForms: [] },
         "GET /api/company-lookup/capabilities/FR": {
           status: "UNAVAILABLE",
@@ -135,6 +138,13 @@ function setup(
           noteKeys: [],
         },
         "GET /api/country-readiness/FR": { complete: true },
+        "GET /api/country-readiness/NZ": { complete: true },
+        "GET /api/company-lookup/capabilities/NZ": {
+          status: "UNAVAILABLE",
+          schemes: [],
+          providers: [],
+          noteKeys: [],
+        },
         "GET /api/address-autocomplete/capability": { enabled: false },
       }
       if (!(key in responses)) throw new Error(`Unexpected request: ${key}`)
@@ -181,6 +191,16 @@ afterEach(() => {
 })
 
 describe("company settings save synchronization", () => {
+  it("lets a New Zealand company declare it is not registered for GST", async () => {
+    const { posts } = setup({ country: "New Zealand", countryCode: "NZ", currency: "NZD" })
+    await loaded()
+    await screen.findByText("Not registered for GST")
+    fireEvent.click(screen.getByTestId("company-exemptvat-switch"))
+    fireEvent.click(saveButton())
+    await waitFor(() => expect(posts).toHaveLength(1))
+    expect(posts[0].exemptVat).toBe(true)
+  })
+
   it("keeps a reverted edit through the late refetch and sends it on the next save", async () => {
     const { controls, posts } = setup()
     await loaded()

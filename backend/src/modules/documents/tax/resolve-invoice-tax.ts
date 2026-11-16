@@ -551,6 +551,41 @@ export function resolveInvoiceCrossBorderTax(
 
   const rows = Array.isArray(input.data.lines) ? (input.data.lines as Record<string, unknown>[]) : [];
 
+  const declaredProfile = taxSystemRegistry.resolve(sellerCC)?.taxSystem;
+  if (
+    declaredProfile &&
+    (declaredProfile.kind === 'VAT' || declaredProfile.kind === 'GST') &&
+    declaredProfile.crossBorderTreatment === 'declared'
+  ) {
+    const crossBorder = sellerCC !== buyerCC;
+    if (input.seller.taxScheme && input.seller.taxScheme !== 'STANDARD') {
+      return {
+        ...applyDomesticTaxScheme(
+          input,
+          sellerCC,
+          rows,
+          taxSystemRegistry,
+          vatValidator,
+          input.seller.taxScheme,
+        ),
+        crossBorder,
+      };
+    }
+    if (rows.some((row) => typeof row.vatRate !== 'string' || !row.vatRate.trim())) {
+      throw new ForeignVatRateError('Choose a GST/VAT treatment for every invoice line before issuing it.');
+    }
+    assertDomesticRatesKnown(sellerCC, rows, vatRateCatalog);
+    // Keep catalog ids: 0% zero-rated and 0% exempt are different treatments, including on a retry.
+    const declaredRows = rows.map(
+      ({ __crossBorderCategory: _category, __crossBorderExemptionReason: _reason, ...row }) => row,
+    );
+    return {
+      data: { ...input.data, lines: declaredRows, __crossBorderMentions: [] },
+      crossBorder,
+      warnings: [],
+    };
+  }
+
   if (sellerCC === buyerCC) {
     // A seller under a non-STANDARD tax scheme (FRANCHISE_BASE today — see `load-and-resolve.ts`'s
     // own mapping comment) never charges VAT domestically either: `applyDomesticTaxScheme` reuses the

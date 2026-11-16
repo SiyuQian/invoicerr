@@ -80,8 +80,8 @@ describe('PaymentMethodsController — authorization', () => {
     return new RolesGuard(reflector).canActivate(context);
   }
 
-  function requestWithKey(rawKey: string) {
-    return { headers: { 'x-api-key': rawKey }, params: { methodId: 'bank_transfer' }, query: {}, body: {} };
+  function requestWithKey(rawKey: string, methodId = 'bank_transfer') {
+    return { headers: { 'x-api-key': rawKey }, params: { methodId }, query: {}, body: {} };
   }
 
   /** Issue #416 - the two NEW client-scoped routes carry their own `:clientId` param, never
@@ -156,18 +156,24 @@ describe('PaymentMethodsController — authorization', () => {
 
   // Mirror image: the right scope, the wrong role. An API key is minted by a person and never
   // outranks them, so a MEMBER's key must be refused here exactly like the MEMBER themselves.
-  it('refuses a company:write key held by a MEMBER on the config write', async () => {
+  it.each([
+    'bank_transfer',
+    'bank_transfer_nz',
+  ])('refuses a company:write key held by a MEMBER on the config write', async (methodId) => {
     const rawKey = await createApiKey(memberUserId, ['company:write']);
     await expect(
-      runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey)),
+      runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey, methodId)),
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('lets a company:write key held by an ADMIN through on the config write', async () => {
+  it.each([
+    'bank_transfer',
+    'bank_transfer_nz',
+  ])('lets a company:write key held by an ADMIN through on the config write', async (methodId) => {
     const rawKey = await createApiKey(adminUserId, ['company:write']);
-    await expect(runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey))).resolves.toBe(
-      true,
-    );
+    await expect(
+      runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey, methodId)),
+    ).resolves.toBe(true);
   });
 
   // The human half of the same route. A session carries no scopes at all (`request.scopes` is null,

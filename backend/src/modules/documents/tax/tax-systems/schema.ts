@@ -53,6 +53,8 @@ export interface CountryTaxSystemFact {
   /** France only, sourced — see `data/fr.json`. Absent (not `false`) for every other country: "not
    *  established", never a guessed `true`. */
   hasDomesticZeroRate?: boolean;
+  /** Use the seller's selected tax treatment; buyer country alone cannot establish zero-rating. */
+  crossBorderTreatment?: 'declared';
   schemes?: ('STANDARD' | 'FRANCHISE_BASE' | 'EXEMPT')[];
   /** SALES_TAX only (`kind: 'SALES_TAX'`, the United States today). */
   stateRates?: Record<string, number>;
@@ -64,6 +66,12 @@ export interface CountryTaxSystemFact {
 export class InvalidTaxSystemProvenanceError extends Error {}
 
 export function assertValidTaxSystemProvenance(fact: CountryTaxSystemFact, context: string): void {
+  if (
+    fact.crossBorderTreatment !== undefined &&
+    (fact.crossBorderTreatment !== 'declared' || (fact.kind !== 'VAT' && fact.kind !== 'GST'))
+  ) {
+    throw new InvalidTaxSystemProvenanceError(`${context}: invalid crossBorderTreatment.`);
+  }
   const provenance = fact.provenance as { kind?: unknown } | null | undefined;
   if (!provenance || (provenance.kind !== 'legal' && provenance.kind !== 'unverified')) {
     throw new InvalidTaxSystemProvenanceError(

@@ -37,7 +37,7 @@ describe('CountryFieldOverlayCatalog', () => {
 
   it('defaults to the real shipped catalog — the five wired countries each ship a real overlay (see data/all.ts)', () => {
     const catalog = new CountryFieldOverlayCatalog();
-    expect(catalog.countries()).toEqual(['DE', 'FR', 'IT', 'PL', 'PT']);
+    expect(catalog.countries()).toEqual(['DE', 'FR', 'IT', 'NZ', 'PL', 'PT']);
     const supplyType = {
       op: 'add',
       path: 'lines',

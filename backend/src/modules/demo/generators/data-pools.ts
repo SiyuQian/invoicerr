@@ -7,16 +7,13 @@
  */
 import { Rng, floatBetween, intBetween, pickDistinct, pickOne } from './rng';
 
-export type SupportedCountryCode = 'FR' | 'DE' | 'IT' | 'PL' | 'PT' | 'DZ';
+export type SupportedCountryCode = 'FR' | 'DE' | 'IT' | 'PL' | 'PT' | 'DZ' | 'NZ';
 
 export interface CountryMeta {
   countryCode: SupportedCountryCode;
   countryName: string;
   language: string;
-  /** The next country in the round-robin: every company's ONE foreign, cross-border client is drawn
-   *  from this country's own client pool, so six companies cover all six countries as both seller
-   *  and buyer (FR -> DE -> IT -> PT -> PL -> DZ -> FR), the same "each country reachable as seller
-   *  and buyer" spirit `e2e/cypress/fixtures/scenarios.ts`'s six legs hold, for a live demo. */
+  /** Country pool used for this company's cross-border client. */
   foreignClientCountry: SupportedCountryCode;
   cities: { city: string; postalCode: string }[];
   companyNamePool: { base: string; suffix: string }[];
@@ -28,6 +25,35 @@ export interface CountryMeta {
 }
 
 const COUNTRIES: Record<SupportedCountryCode, CountryMeta> = {
+  NZ: {
+    countryCode: 'NZ',
+    countryName: 'New Zealand',
+    language: 'en',
+    foreignClientCountry: 'FR',
+    cities: [
+      { city: 'Auckland', postalCode: '1010' },
+      { city: 'Wellington', postalCode: '6011' },
+      { city: 'Christchurch', postalCode: '8011' },
+    ],
+    companyNamePool: [
+      { base: 'Harbour Design', suffix: 'Limited' },
+      { base: 'Southern Consulting', suffix: 'Limited' },
+      { base: 'Kauri Software', suffix: 'Limited' },
+    ],
+    clientNamePool: [
+      { base: 'City Logistics', suffix: 'Limited' },
+      { base: 'Coastal Studio', suffix: 'Limited' },
+      { base: 'Garden Cafe', suffix: 'Limited' },
+    ],
+    contactFirstNames: ['Emma', 'Oliver', 'Charlotte', 'Noah'],
+    contactLastNames: ['Wilson', 'Taylor', 'Williams', 'Brown'],
+    articleNamePool: [
+      { name: 'Consulting day', type: 'SERVICE' },
+      { name: 'Website maintenance', type: 'SERVICE' },
+      { name: 'Ergonomic office chair', type: 'PRODUCT' },
+    ],
+    streetPool: ['12 Queen Street', '8 Victoria Street', '3 High Street'],
+  },
   FR: {
     countryCode: 'FR',
     countryName: 'France',
@@ -249,4 +275,4 @@ export function randomLineQuantity(rng: Rng): number {
   return intBetween(rng, 1, 6);
 }
 
-export const SUPPORTED_COUNTRY_CODES: SupportedCountryCode[] = ['FR', 'DE', 'IT', 'PL', 'PT', 'DZ'];
+export const SUPPORTED_COUNTRY_CODES: SupportedCountryCode[] = ['FR', 'DE', 'IT', 'PL', 'PT', 'DZ', 'NZ'];

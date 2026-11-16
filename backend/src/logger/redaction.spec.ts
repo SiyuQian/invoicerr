@@ -55,6 +55,24 @@ describe('redactLogText', () => {
 });
 
 describe('redactLogValue', () => {
+  it('redacts NZ bank account keys at every depth without hiding diagnostic identifiers', () => {
+    expect(
+      redactLogValue({
+        companyId: 'company-1',
+        methodId: 'bank_transfer_nz',
+        code: 'INVALID_CONFIG',
+        config: { accountNumber: '12-3456-0123456-00', accountName: 'Example Ltd' },
+        list: [{ BANK_ACCOUNT_NUMBER: '1234560123456000', account_name: 'Example Ltd' }],
+      }),
+    ).toEqual({
+      companyId: 'company-1',
+      methodId: 'bank_transfer_nz',
+      code: 'INVALID_CONFIG',
+      config: { accountNumber: REDACTED, accountName: REDACTED },
+      list: [{ BANK_ACCOUNT_NUMBER: REDACTED, account_name: REDACTED }],
+    });
+  });
+
   it('redacts sensitive values by key name, at any depth, in both camel and snake case', () => {
     expect(
       redactLogValue({

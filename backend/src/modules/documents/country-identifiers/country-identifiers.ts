@@ -29,6 +29,7 @@
 import prisma from '@/prisma/prisma.service';
 
 import { PartyType } from './schema';
+import { defaultComposedCountryCatalog } from '../countries/registry';
 
 /** Where a human adds the missing file — spelled out in the block message itself, the same way
  *  country-policy.ts's own DATA_DIR_HINT does. */
@@ -46,6 +47,7 @@ export interface RequiredIdentifierView {
 
 export interface RequiredIdentifiersDecision {
   requirements: RequiredIdentifierView[];
+  taxKind?: 'GST';
   /** Present only when the COUNTRY itself has no identifier-requirements file/rows at all — see
    *  this file's own header for the distinction from the ordinary "nothing for this party type"
    *  empty case, which carries no reason. */
@@ -89,5 +91,6 @@ export async function resolveRequiredIdentifiers(
       helpTextKey: row.helpTextKey ?? undefined,
     }));
 
-  return { requirements };
+  const taxKind = defaultComposedCountryCatalog.get(resolvedCode)?.taxSystem?.kind;
+  return { requirements, ...(taxKind === 'GST' ? { taxKind } : {}) };
 }

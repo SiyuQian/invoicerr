@@ -2,6 +2,7 @@ import { bankTransferPaymentMethod } from './bank-transfer.descriptor';
 import { cashPaymentMethod } from './cash.descriptor';
 import { chequePaymentMethod } from './cheque.descriptor';
 import { molliePaymentMethod } from './mollie.descriptor';
+import { nzBankTransferPaymentMethod } from './nz-bank-transfer.descriptor';
 import { paypalPaymentMethod } from './paypal.descriptor';
 import { stripePaymentMethod } from './stripe.descriptor';
 import { PaymentMethodDescriptor } from './types';
@@ -30,6 +31,7 @@ import { PaymentMethodDescriptor } from './types';
  */
 export const BUILT_IN_PAYMENT_METHODS: PaymentMethodDescriptor[] = [
   bankTransferPaymentMethod,
+  nzBankTransferPaymentMethod,
   paypalPaymentMethod,
   cashPaymentMethod,
   chequePaymentMethod,

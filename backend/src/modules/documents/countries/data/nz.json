@@ -1,0 +1,760 @@
+{
+  "countryCode": "NZ",
+  "policy": {
+    "countryCode": "NZ",
+    "documentTypes": [
+      "quote",
+      "invoice",
+      "credit-note",
+      "expense",
+      "received-invoice",
+      "purchase-order",
+      "goods-receipt"
+    ],
+    "rules": [
+      {
+        "typeId": "quote",
+        "actionId": "save-draft",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "send",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "convert-to-invoice",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "request-deposit",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "request-installments",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "duplicate",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "share-link",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "request-signature",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "accept-manually",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "quote",
+        "actionId": "delete",
+        "allowed": true,
+        "statuses": ["draft"],
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "save-draft",
+        "allowed": true,
+        "statuses": ["draft"],
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "send",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "validate",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "duplicate",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "record-payment",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "export-accounting",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "share-link",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "invoice",
+        "actionId": "delete",
+        "allowed": true,
+        "statuses": ["draft"],
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "credit-note",
+        "actionId": "save-draft",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "credit-note",
+        "actionId": "send",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "credit-note",
+        "actionId": "share-link",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "credit-note",
+        "actionId": "delete",
+        "allowed": true,
+        "statuses": ["draft"],
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "expense",
+        "actionId": "save-draft",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "expense",
+        "actionId": "delete",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "received-invoice",
+        "actionId": "receive",
+        "allowed": true,
+        "statuses": ["received"],
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "received-invoice",
+        "actionId": "approve",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "received-invoice",
+        "actionId": "reject",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "received-invoice",
+        "actionId": "record-payment",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "received-invoice",
+        "actionId": "delete",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "purchase-order",
+        "actionId": "save-draft",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "purchase-order",
+        "actionId": "send",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "purchase-order",
+        "actionId": "cancel-order",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "purchase-order",
+        "actionId": "delete",
+        "allowed": true,
+        "statuses": ["draft"],
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "goods-receipt",
+        "actionId": "save-draft",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "goods-receipt",
+        "actionId": "record",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      },
+      {
+        "typeId": "goods-receipt",
+        "actionId": "delete",
+        "allowed": true,
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product operation using the shared lifecycle. No NZ-specific prohibition identified; verify any sector-specific restriction before extending this rule. GST evidence requirements: https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      }
+    ],
+    "notes": "Ordinary PDF/email invoicing only. PINT A-NZ export and government procurement eInvoicing are not implemented. Internal operations retain the existing document lifecycle; no EU or Portuguese numbering, reporting, signature or payment-term law is imported. https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work",
+    "numbering": [
+      {
+        "typeId": "credit-note",
+        "requirement": "sequential-number-required",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product choice: assign a stable number to correction documents. This is not a claim that NZ requires a consecutive sequence. IRD requires identification of the original supply: https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+        }
+      }
+    ],
+    "numberFormats": {
+      "constraints": [],
+      "formats": [
+        {
+          "typeId": "quote",
+          "pattern": "QUOTE-{year}-{number:4}",
+          "constrainedBy": [],
+          "unconstrained": "Product numbering format; NZ does not prescribe a character pattern here. Original-supply identification is required for corrections.",
+          "rationale": "Reuse the shared default number shape with a continuous counter.",
+          "reset": "never",
+          "resetProvenance": {
+            "kind": "unverified",
+            "resolutionNote": "Continuous counter is a product choice, without a claim that NZ requires a sequential or annual series."
+          }
+        },
+        {
+          "typeId": "invoice",
+          "pattern": "INVOICE-{year}-{number:4}",
+          "constrainedBy": [],
+          "unconstrained": "Product numbering format; NZ does not prescribe a character pattern here. Original-supply identification is required for corrections.",
+          "rationale": "Reuse the shared default number shape with a continuous counter.",
+          "reset": "never",
+          "resetProvenance": {
+            "kind": "unverified",
+            "resolutionNote": "Continuous counter is a product choice, without a claim that NZ requires a sequential or annual series."
+          }
+        },
+        {
+          "typeId": "credit-note",
+          "pattern": "CN-{year}-{number:4}",
+          "constrainedBy": [],
+          "unconstrained": "Product numbering format; NZ does not prescribe a character pattern here. Original-supply identification is required for corrections.",
+          "rationale": "Reuse the shared default number shape with a continuous counter.",
+          "reset": "never",
+          "resetProvenance": {
+            "kind": "unverified",
+            "resolutionNote": "Continuous counter is a product choice, without a claim that NZ requires a sequential or annual series."
+          }
+        },
+        {
+          "typeId": "purchase-order",
+          "pattern": "PURCHASE-ORDER-{year}-{number:4}",
+          "constrainedBy": [],
+          "unconstrained": "Product numbering format; NZ does not prescribe a character pattern here. Original-supply identification is required for corrections.",
+          "rationale": "Reuse the shared default number shape with a continuous counter.",
+          "reset": "never",
+          "resetProvenance": {
+            "kind": "unverified",
+            "resolutionNote": "Continuous counter is a product choice, without a claim that NZ requires a sequential or annual series."
+          }
+        },
+        {
+          "typeId": "goods-receipt",
+          "pattern": "GOODS-RECEIPT-{year}-{number:4}",
+          "constrainedBy": [],
+          "unconstrained": "Product numbering format; NZ does not prescribe a character pattern here. Original-supply identification is required for corrections.",
+          "rationale": "Reuse the shared default number shape with a continuous counter.",
+          "reset": "never",
+          "resetProvenance": {
+            "kind": "unverified",
+            "resolutionNote": "Continuous counter is a product choice, without a claim that NZ requires a sequential or annual series."
+          }
+        }
+      ],
+      "runningSeries": {
+        "summary": "Keep an existing series and its counter. Never renumber issued documents.",
+        "onViolation": "If a pattern cannot be rendered, use the country format for the next number without resetting its counter.",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product continuity policy. NZ-specific numbering restrictions have not been established; no EU numbering law is imported."
+        }
+      }
+    },
+    "domesticInvoiceCurrency": {
+      "currency": "NZD",
+      "provenance": {
+        "kind": "legal",
+        "sourceText": "Invoices must be in New Zealand currency.",
+        "sourceCheckedAt": "2026-11-16"
+      },
+      "notes": "IRD Smart business (IR320), August 2026, taxable supply information, printed p. 50: https://www.ird.govt.nz/-/media/project/ir/home/documents/forms-and-guides/ir300---ir399/ir320/ir320.pdf. The shared domestic-currency gate applies to domestic invoices; foreign-currency GST conversion remains outside this integration."
+    }
+  },
+  "identifiers": {
+    "countryCode": "NZ",
+    "schemes": [
+      {
+        "scheme": "LEGAL_ID",
+        "appliesTo": "BOTH",
+        "label": "NZBN",
+        "required": false,
+        "pattern": "^\\d{13}$",
+        "helpText": "13 digits",
+        "helpTextKey": "settings.identifiers.help.NZ.LEGAL_ID",
+        "provenance": {
+          "kind": "legal",
+          "sourceText": "Each NZBN is a 13 digit Global Location Number (GLN) provided by GS1 New Zealand.",
+          "sourceCheckedAt": "2026-11-16"
+        },
+        "notes": "https://portal.api.business.govt.nz/api/nzbn. Optional: sole traders may choose to register. NZBN is distinct from a GST number."
+      },
+      {
+        "scheme": "VAT",
+        "appliesTo": "BOTH",
+        "label": "GST number",
+        "required": false,
+        "helpText": "Your GST registration number (the same as your IRD number), if registered for GST.",
+        "helpTextKey": "settings.identifiers.help.NZ.VAT",
+        "provenance": {
+          "kind": "legal",
+          "sourceText": "Your GST number will be the same as your IRD number.",
+          "sourceCheckedAt": "2026-11-16"
+        },
+        "notes": "https://www.ird.govt.nz/gst/registering-for-gst/register-for-gst. Optional on party creation: unregistered businesses must be able to onboard.",
+        "demoGenerator": {
+          "id": "template",
+          "template": "049091850"
+        }
+      }
+    ],
+    "invoiceRequirements": [
+      {
+        "party": "SELLER",
+        "scheme": "VAT",
+        "when": {
+          "sellerVatRegime": ["STANDARD"]
+        },
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Product rule requires a registered seller GST number on every issued invoice, including those at or below NZ$200. This is deliberately stricter than GST Act s 19E: above NZ$200 the number is required. https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work"
+        }
+      }
+    ],
+    "notes": "The shared client-issuance gate requires buyer name/address/city, exceeding the identification minimum for GST-registered buyers above NZ$1,000. Buyer GST numbers and NZBNs are not mandatory. Unregistered sellers use the existing exemptVat setting."
+  },
+  "correctionRoutes": {
+    "countryCode": "NZ",
+    "routes": [
+      {
+        "routeId": "CREDIT_NOTE",
+        "status": "allowed",
+        "provenance": {
+          "kind": "legal",
+          "sourceText": "A seller must provide supply correction information to correct an error",
+          "sourceCheckedAt": "2026-11-16"
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes; see also IR375 GST guide, Supply correction information (including debit and credit notes). The correction must identify the original supply and show the changed GST amount. Linked credit notes only in this product."
+      },
+      {
+        "routeId": "DEBIT_NOTE",
+        "status": "allowed",
+        "provenance": {
+          "kind": "legal",
+          "sourceText": "A seller must provide supply correction information to correct an error",
+          "sourceCheckedAt": "2026-11-16"
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes; see also IR375 GST guide, Supply correction information (including debit and credit notes). The correction must identify the original supply and show the changed GST amount. Linked credit notes only in this product."
+      },
+      {
+        "routeId": "CORRECTIVE_INVOICE",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "CANCEL_AND_REPLACE",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "INTERNAL_CREDIT_NOTE",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "AUTHORITY_ANNULMENT",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "RESUBMIT_SAME_IDENTITY",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "ANNOTATED_DUPLICATE",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "LEDGER_ANNOTATION",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "NO_DOCUMENT_BY_LAW",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      },
+      {
+        "routeId": "COUNTERPARTY_OBJECTION",
+        "status": "unverified",
+        "provenance": {
+          "kind": "unverified",
+          "resolutionNote": "Not implemented or established for NZ. Check GST Act 1985 s 25 and IRD supply correction guidance before enabling this route."
+        },
+        "notes": "https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes"
+      }
+    ]
+  },
+  "vatRates": {
+    "countryCode": "NZ",
+    "rates": [
+      {
+        "id": "nz-standard",
+        "rate": 15,
+        "label": "GST standard rate",
+        "category": "STANDARD",
+        "provenance": {
+          "kind": "legal",
+          "sourceText": "If you're registered for GST, you'll need to charge GST at 15% on most taxable supplies you make.",
+          "sourceCheckedAt": "2026-11-16"
+        },
+        "notes": "https://www.ird.govt.nz/gst/charging-gst"
+      },
+      {
+        "id": "nz-zero",
+        "rate": 0,
+        "label": "Zero-rated GST (eligibility required)",
+        "category": "ZERO",
+        "provenance": {
+          "kind": "legal",
+          "sourceText": "Zero-rated supplies are supplies that have GST charged at 0% where certain requirements are met.",
+          "sourceCheckedAt": "2026-11-16"
+        },
+        "notes": "https://www.ird.govt.nz/gst/charging-gst/zero-rated-supplies. A foreign customer address alone does not establish eligibility."
+      },
+      {
+        "id": "nz-exempt",
+        "rate": 0,
+        "label": "GST-exempt supply",
+        "category": "EXEMPT",
+        "provenance": {
+          "kind": "legal",
+          "sourceText": "Exempt supplies are goods and services which are not subject to GST.",
+          "sourceCheckedAt": "2026-11-16"
+        },
+        "notes": "https://www.ird.govt.nz/gst/charging-gst/exempt-supplies. Distinct from zero-rated supplies and from an unregistered seller."
+      }
+    ]
+  },
+  "taxSystem": {
+    "countryCode": "NZ",
+    "kind": "GST",
+    "hasDomesticZeroRate": true,
+    "schemes": ["STANDARD", "FRANCHISE_BASE", "EXEMPT"],
+    "crossBorderTreatment": "declared",
+    "provenance": {
+      "kind": "unverified",
+      "resolutionNote": "Product treatment: use the seller-declared GST category/rate for both domestic and overseas sales; customer country cannot establish zero-rating eligibility. Verify GST Act ss 8, 11, 11A and the actual transaction. https://www.ird.govt.nz/gst/charging-gst/zero-rated-supplies"
+    },
+    "notes": "Rates derive from vatRates. FRANCHISE_BASE reuses Company.exemptVat to represent not registered for GST, with NZ wording. No EU reverse-charge/export inference. This is seller-selected tax treatment, not automated eligibility assessment."
+  },
+  "channelPolicy": {
+    "countryCode": "NZ",
+    "facts": [],
+    "notes": "Ordinary invoices use the existing email channel. No universal Peppol mandate is asserted. Government procurement and PINT A-NZ delivery are outside this support scope; do not mark email as satisfying a government eInvoicing obligation. https://www.einvoicing.govt.nz/get-set-up/advice-for-government-agencies/advice-for-businesses-trading-with-government"
+  },
+  "retention": {
+    "countryCode": "NZ",
+    "rules": [
+      {
+        "label": "GST records",
+        "years": 7,
+        "origin": "fiscalYearEndUnknownSafe",
+        "legalRef": "Goods and Services Tax Act 1985, s 75(3); https://www.legislation.govt.nz/act/public/1985/141/en/2026-05-07/sections/DLM85281/",
+        "notes": "At least 7 years after the end of the related taxable period. The app does not store the seller GST period: reuse the conservative issueDate + 1 year origin, then add seven years, covering both the unknown GST period and tax-year close. This intentionally retains longer than the statutory minimum. Offshore storage approval and IRD extensions are separate operator obligations. https://www.ird.govt.nz/records"
+      }
+    ]
+  },
+  "localizedMentions": {
+    "countryCode": "NZ",
+    "situations": {
+      "franchise": {
+        "code": "NZ_NOT_GST_REGISTERED",
+        "text": "Not registered for GST — no GST charged.",
+        "source": "Product explanation, not prescribed statutory wording. https://www.ird.govt.nz/gst/registering-for-gst/register-for-gst; Company.exemptVat means the seller is not GST registered."
+      }
+    }
+  },
+  "countryFields": {
+    "countryCode": "NZ",
+    "overlays": [
+      {
+        "typeId": "invoice",
+        "operations": [
+          {
+            "op": "modify",
+            "path": "lines",
+            "key": "vatRate",
+            "patch": {
+              "label": "GST rate",
+              "helpText": "Choose the GST treatment for this supply. Zero-rating, including exports, requires eligibility under NZ GST rules.",
+              "labelKey": "documents.countryFields.gstRate.label",
+              "helpTextKey": "documents.countryFields.gstRate.helpText"
+            }
+          }
+        ]
+      },
+      {
+        "typeId": "quote",
+        "operations": [
+          {
+            "op": "modify",
+            "path": "lines",
+            "key": "vatRate",
+            "patch": {
+              "label": "GST rate",
+              "helpText": "Choose the GST treatment for this supply. Zero-rating, including exports, requires eligibility under NZ GST rules.",
+              "labelKey": "documents.countryFields.gstRate.label",
+              "helpTextKey": "documents.countryFields.gstRate.helpText"
+            }
+          }
+        ]
+      },
+      {
+        "typeId": "credit-note",
+        "operations": [
+          {
+            "op": "modify",
+            "path": "lines",
+            "key": "vatRate",
+            "patch": {
+              "label": "GST rate",
+              "helpText": "Choose the GST treatment for this supply. Zero-rating, including exports, requires eligibility under NZ GST rules.",
+              "labelKey": "documents.countryFields.gstRate.label",
+              "helpTextKey": "documents.countryFields.gstRate.helpText"
+            }
+          },
+          {
+            "op": "modify",
+            "path": "",
+            "key": "invoice",
+            "patch": {
+              "required": true
+            }
+          }
+        ]
+      },
+      {
+        "typeId": "received-invoice",
+        "operations": [
+          {
+            "op": "modify",
+            "path": "lines",
+            "key": "vatRate",
+            "patch": {
+              "label": "GST rate",
+              "helpText": "Choose the GST treatment for this supply. Zero-rating, including exports, requires eligibility under NZ GST rules.",
+              "labelKey": "documents.countryFields.gstRate.label",
+              "helpTextKey": "documents.countryFields.gstRate.helpText"
+            }
+          }
+        ]
+      }
+    ],
+    "notes": "GST terminology only. Credit notes must refer to an original invoice to identify the corrected supply (IRD supply correction information). No NZ-specific field machinery."
+  },
+  "companyLookup": {
+    "countryCode": "NZ",
+    "providers": ["nz-nzbn"]
+  }
+}

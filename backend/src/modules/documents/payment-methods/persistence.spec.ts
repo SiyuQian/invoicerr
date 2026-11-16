@@ -138,11 +138,93 @@ describe('payment-methods/persistence', () => {
     wireClientStore(clientsByCompany, restrictions);
   });
 
+  describe('New Zealand configuration', () => {
+    const config = { accountName: 'Example Ltd', accountNumber: '12-3456-0123456-000' };
+
+    it('starts disabled, saves to JSON, and never changes the IBAN', async () => {
+      company.iban = 'FR1420041010050500013M02606';
+      company.bic = 'PSSTFRPPPAR';
+      const before = (await listCompanyPaymentMethods(COMPANY_ID)).find((m) => m.id === 'bank_transfer_nz');
+      expect(before).toMatchObject({ enabled: false, configured: false, config: {} });
+      await updateCompanyPaymentMethodConfig(COMPANY_ID, 'bank_transfer_nz', { config, enabled: true });
+      expect(
+        (await listCompanyPaymentMethods(COMPANY_ID)).find((m) => m.id === 'bank_transfer_nz'),
+      ).toMatchObject({ config, enabled: true, configured: true });
+      expect(mockedPrisma.company.update).not.toHaveBeenCalled();
+      expect(company).toEqual({ iban: 'FR1420041010050500013M02606', bic: 'PSSTFRPPPAR' });
+      expect(mockedPrisma.companyPaymentMethodConfig.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { companyId_methodId: { companyId: COMPANY_ID, methodId: 'bank_transfer_nz' } },
+        }),
+      );
+    });
+
+    it('rejects invalid edits before writing and preserves an enabled account', async () => {
+      rows.set('bank_transfer_nz', { config, enabled: true });
+      await expect(
+        updateCompanyPaymentMethodConfig(COMPANY_ID, 'bank_transfer_nz', {
+          config: { ...config, accountNumber: 'not-an-account' },
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockedPrisma.companyPaymentMethodConfig.upsert).not.toHaveBeenCalled();
+      expect(rows.get('bank_transfer_nz')).toEqual({ config, enabled: true });
+    });
+
+    it('revalidates drafts on a bare enable and preserves values when disabled', async () => {
+      await updateCompanyPaymentMethodConfig(COMPANY_ID, 'bank_transfer_nz', {
+        config: { accountName: 'Example Ltd', accountNumber: 'unfinished' },
+      });
+      expect(
+        (await listCompanyPaymentMethods(COMPANY_ID)).find((m) => m.id === 'bank_transfer_nz')?.configured,
+      ).toBe(false);
+      mockedPrisma.companyPaymentMethodConfig.upsert.mockClear();
+      await expect(
+        updateCompanyPaymentMethodConfig(COMPANY_ID, 'bank_transfer_nz', { enabled: true }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockedPrisma.companyPaymentMethodConfig.upsert).not.toHaveBeenCalled();
+      await updateCompanyPaymentMethodConfig(COMPANY_ID, 'bank_transfer_nz', { config, enabled: true });
+      await updateCompanyPaymentMethodConfig(COMPANY_ID, 'bank_transfer_nz', { enabled: false });
+      expect(rows.get('bank_transfer_nz')).toEqual({ config, enabled: false });
+    });
+
+    it.each([
+      null,
+      [],
+      1,
+      'bad',
+    ])('rejects a non-object config %j even for a disabled method', async (config) => {
+      await expect(updateCompanyPaymentMethodConfig(COMPANY_ID, 'cash', { config } as never)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockedPrisma.companyPaymentMethodConfig.upsert).not.toHaveBeenCalled();
+    });
+  });
+
+  it('applies client restrictions independently to the two bank transfer methods', async () => {
+    const config = { accountName: 'Example Ltd', accountNumber: '12-3456-0123456-000' };
+    rows.set('bank_transfer_nz', { enabled: true, config });
+    expect(
+      (await resolveEnabledPaymentMethodPresentations(COMPANY_ID, {}, CLIENT_ID)).map((m) => m.id),
+    ).toEqual(['bank_transfer_nz']);
+    restrictions.set(CLIENT_ID, new Set(['bank_transfer']));
+    expect(await resolveEnabledPaymentMethodPresentations(COMPANY_ID, {}, CLIENT_ID)).toEqual([]);
+    restrictions.set(CLIENT_ID, new Set(['bank_transfer_nz']));
+    expect((await resolveEnabledPaymentMethodPresentations(COMPANY_ID, {}, CLIENT_ID))[0].lines).toContain(
+      'Account number: 12-3456-0123456-000',
+    );
+    rows.set('bank_transfer_nz', { enabled: false, config });
+    expect(await resolveEnabledPaymentMethodPresentations(COMPANY_ID, {}, CLIENT_ID)).toEqual([]);
+    await expect(
+      setClientPaymentMethodRestrictions(COMPANY_ID, 'foreign-client', ['bank_transfer_nz']),
+    ).rejects.toThrow(NotFoundException);
+  });
+
   describe('listCompanyPaymentMethods', () => {
-    it('returns all five built-in methods, disabled and empty for a company that never configured any', async () => {
+    it('returns all seven built-in methods, disabled and empty for a company that never configured any', async () => {
       const views = await listCompanyPaymentMethods('company-1');
       expect(views.map((v) => v.id)).toEqual([
         'bank_transfer',
+        'bank_transfer_nz',
         'paypal',
         'cash',
         'cheque',

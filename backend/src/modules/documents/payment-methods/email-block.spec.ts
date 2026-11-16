@@ -1,7 +1,25 @@
+import { nzBankTransferPaymentMethod } from './nz-bank-transfer.descriptor';
 import { appendPaymentMethodsToEmail } from './email-block';
 import { PaymentMethodPresentation } from './types';
 
 describe('appendPaymentMethodsToEmail', () => {
+  it('uses the NZ descriptor and escapes its account name in HTML while preserving plain text', () => {
+    const presentation = nzBankTransferPaymentMethod.present({
+      config: {
+        accountName: 'Example <Ltd> & "Co"',
+        accountNumber: '12-3456-0123456-000',
+        bankName: 'Example Bank',
+      },
+    });
+    const result = appendPaymentMethodsToEmail('Hello', '<p>Hello</p>', [presentation], 'en');
+    expect(result.body).toContain('Account name: Example <Ltd> & "Co"');
+    expect(result.body).toContain('Account number: 12-3456-0123456-000');
+    expect(result.body).toContain('Bank name: Example Bank');
+    expect(result.html).toContain('Example &lt;Ltd&gt; &amp; &quot;Co&quot;');
+    expect(result.html).not.toContain('IBAN:');
+    expect(result.html).not.toContain('<a ');
+  });
+
   it('returns body/html UNCHANGED when there are no presentations — no method enabled, or a type that never opts in', () => {
     const result = appendPaymentMethodsToEmail('Dear client,\n\nThanks.', '<p>Dear client,</p>', [], 'en');
     expect(result).toEqual({ body: 'Dear client,\n\nThanks.', html: '<p>Dear client,</p>' });

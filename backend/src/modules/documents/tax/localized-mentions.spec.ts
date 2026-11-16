@@ -21,6 +21,7 @@ const LEGACY_OVERRIDES: Partial<
   Record<LocalizableSituation, Record<string, { code: string; text: string }>>
 > = {
   franchise: {
+    NZ: { code: 'NZ_NOT_GST_REGISTERED', text: 'Not registered for GST — no GST charged.' },
     FR: { code: 'FR_293B', text: 'TVA non applicable, art. 293 B du CGI' },
     PT: { code: 'PT_REGIME_ISENCAO', text: 'IVA - regime de isenção' },
   },

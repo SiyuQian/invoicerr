@@ -277,4 +277,49 @@ describe("Client payment-method restriction (issue #416)", () => {
       });
     });
   });
+  it("keeps NZ transfer separate from legacy bank transfer restrictions and honors company disabling", () => {
+    cy.request({
+      method: "PATCH",
+      url: `${api}/api/payment-methods/bank_transfer_nz`,
+      body: {
+        enabled: true,
+        config: {
+          accountName: "Example Ltd",
+          accountNumber: "12-3456-0123456-00",
+        },
+      },
+    });
+    createClient("NZ Bank Transfer Client").then((clientId: string) => {
+      createInvoiceDraft(clientId).then((id) => {
+        const url = `${api}/api/documents/${id}/pdf?typeId=invoice`;
+        cy.request({
+          method: "PATCH",
+          url: `${api}/api/payment-methods/clients/${clientId}`,
+          body: { methodIds: ["bank_transfer"] },
+        });
+        pdfText(url).then((text) => {
+          expect(text).to.contain("IBAN:");
+          expect(text).not.to.contain("Account number:");
+        });
+        cy.request({
+          method: "PATCH",
+          url: `${api}/api/payment-methods/clients/${clientId}`,
+          body: { methodIds: ["bank_transfer_nz"] },
+        });
+        pdfText(url).then((text) => {
+          expect(text).to.contain("Account number: 12-3456-0123456-00");
+          expect(text).not.to.contain("IBAN:");
+        });
+        cy.request({
+          method: "PATCH",
+          url: `${api}/api/payment-methods/bank_transfer_nz`,
+          body: { enabled: false },
+        });
+        pdfText(url).then((text) => {
+          expect(text).not.to.contain("Account number:");
+        });
+      });
+    });
+  });
+
 });

@@ -1665,6 +1665,13 @@
         }
     },
     "paymentMethods": {
+        "nzBankTransfer": {
+            "errors": {
+                "accountName": "Saisissez un nom de compte sur une seule ligne, de 200 caractères maximum.",
+                "accountNumber": "Saisissez un compte néo-zélandais au format BB-BBBB-AAAAAAA-SS ou BB-BBBB-AAAAAAA-SSS. Les espaces ou les chiffres seuls sont également acceptés.",
+                "bankName": "Saisissez un nom de banque sur une seule ligne, de 200 caractères maximum, ou laissez ce champ vide."
+            }
+        },
         "title": "Méthodes de paiement",
         "description": "Choisissez les méthodes de paiement que vous acceptez, et les coordonnées affichées à vos clients pour chacune d'elles.",
         "actions": {

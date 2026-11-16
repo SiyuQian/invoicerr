@@ -31,7 +31,6 @@
     "MX": { "noteKey": "companyLookup.notes.MX" },
     "NL": { "providers": ["nl-kvk", "eu-vies"] },
     "NO": { "providers": ["no-brreg"] },
-    "NZ": { "providers": ["nz-nzbn"] },
     "PE": { "providers": ["pe-sunat"] },
     "RO": { "providers": ["ro-anaf", "eu-vies"] },
     "SE": { "providers": ["eu-vies"], "noteKey": "companyLookup.notes.SE" },

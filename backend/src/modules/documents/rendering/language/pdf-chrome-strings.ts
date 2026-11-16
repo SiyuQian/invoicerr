@@ -364,6 +364,14 @@ const CHROME_STRINGS: Record<RenderLanguage, PdfChromeStrings> = {
  *  is exhaustive, not `Partial`), so this never actually falls through to `EN` for a well-typed
  *  caller — the `?? EN` exists only as the same defensive floor `resolveRecipientLanguage` already is
  *  for a caller that reaches this with an unchecked value (e.g. straight from the database). */
-export function pdfChromeStrings(language: RenderLanguage): PdfChromeStrings {
-  return CHROME_STRINGS[language] ?? EN;
+export function pdfChromeStrings(language: RenderLanguage, taxKind?: string): PdfChromeStrings {
+  const strings = CHROME_STRINGS[language] ?? EN;
+  if (taxKind !== 'GST') return strings;
+  const gst = (text: string) => text.replace(/^(VAT|TVA|IVA|USt\.)/, 'GST');
+  return {
+    ...strings,
+    vatOn: (rate, base) => gst(strings.vatOn(rate, base)),
+    vatInNationalCurrency: (currency) => gst(strings.vatInNationalCurrency(currency)),
+    identifierLabels: { ...strings.identifierLabels, VAT: 'GST number' },
+  };
 }

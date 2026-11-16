@@ -27,6 +27,8 @@ name: Tests
 # reason `tests-green`'s own comment gives below: a skipped job is a failed required check. The job always
 # runs and always reports `success`; only its steps are skipped. `merge_group` is never filtered.
 on:
+  # Manual runs intentionally retry only the demo lane on the selected ref.
+  workflow_dispatch:
   pull_request:
   merge_group:
     types: [checks_requested]
@@ -46,6 +48,7 @@ concurrency:
 
 jobs:
   lint:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -93,6 +96,7 @@ jobs:
         run: cd frontend && ./node_modules/.bin/vitest run --maxWorkers=2
 
   i18n-check:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -117,6 +121,7 @@ jobs:
   # see e2e/tsconfig.json's own comment). A type error in a Cypress spec was therefore only ever
   # found by running that spec. This job is cheap and needs no stack at all.
   e2e-typecheck:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -138,6 +143,7 @@ jobs:
         run: cd e2e && npm run check:ports
 
   backend-tests:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     # This job used to run with no database at all, on the assumption that `npm test` is a unit
     # suite. It is not, entirely: 13 spec files -- received-invoices, supplier reconciliation, the
@@ -214,6 +220,7 @@ jobs:
         run: cd backend && ./node_modules/.bin/vitest run --maxWorkers=2
 
   queue-integration:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://postgres@localhost:5432/invoicerr_test?schema=public
@@ -386,6 +393,7 @@ jobs:
   # the reason its comment records — a spec that passes at position 7 and fails at position 2 is not
   # testing the product.
   cypress-run:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     # 75, not 40: shard 1 legitimately needs more. On head 958ba09 its job 129059226500 started
     # 08:35:22Z and was still running 87-dashboard-collections at the 09:15:36Z cut, with every spec
@@ -710,6 +718,7 @@ jobs:
   # webhook, never pushed to Polar). `polar-env.ts#assertPolarEnvConfiguredForBoot` only checks these
   # vars are non-blank at boot; nothing in either spec's path calls the real Polar API.
   cypress-run-saas:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -1092,6 +1101,7 @@ jobs:
   # `merge_group` and `push` pass by construction: the queue builds `gh-readonly-queue/...` branches,
   # and a `push` to `main` is the merge commit the promotion already produced.
   main-promotion-only:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -1152,7 +1162,7 @@ jobs:
         cypress-run-saas,
         cypress-run-demo,
       ]
-    if: always()
+    if: always() && github.event_name != 'workflow_dispatch'
     steps:
       - name: Require every job above to have succeeded
         env:

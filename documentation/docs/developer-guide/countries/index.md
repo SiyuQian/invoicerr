@@ -1,14 +1,14 @@
 ---
 title: "Country directory — e-invoicing system by country"
-description: "The six countries Invoicerr supports, and around a hundred it does not: the local system, the authority, and what adding each one would involve."
+description: "The seven countries Invoicerr supports, and around a hundred it does not: the local system, the authority, and what adding each one would involve."
 sidebar_label: "Overview"
 keywords: [e-invoicing by country, country support, Invoicerr countries]
 ---
 
 # Country directory
 
-Invoicerr supports **six countries**: Germany, France, Italy, Poland, Portugal and Algeria. "Supports"
-has a precise meaning here: those six have data files in the per-country catalogues under
+Invoicerr supports **seven countries**: Germany, France, Italy, Poland, Portugal, Algeria and New Zealand. "Supports"
+has a precise meaning here: those seven have data files in the per-country catalogues under
 `backend/src/modules/documents/`, and those files are the only thing that makes a country work,
 because no business code in this repository ever asks "what country is this?".
 
@@ -31,6 +31,7 @@ is the only page that can say which mechanism has a file today and which does no
 
 | Country | Mechanism-by-mechanism coverage |
 |---|---|
+| [New Zealand](./new-zealand.md) | Ordinary GST invoicing over PDF/email; PINT A-NZ/Peppol not implemented. |
 | [Germany](./germany.md) | [Germany in the compliance matrix](../country-support/de.md) |
 | [France](./france.md) | [France in the compliance matrix](../country-support/fr.md) |
 | [Italy](./italy.md) | [Italy in the compliance matrix](../country-support/it.md) |
@@ -124,7 +125,6 @@ lists the catalogue files someone would have to write.
 | [Kazakhstan](./kazakhstan.md) | ESF |
 | [Malaysia](./malaysia.md) | MyInvois |
 | [Nepal](./nepal.md) | IRD |
-| [New Zealand](./new-zealand.md) | — |
 | [Pakistan](./pakistan.md) | FBR |
 | [Philippines](./philippines.md) | BIR |
 | [Singapore](./singapore.md) | InvoiceNow |

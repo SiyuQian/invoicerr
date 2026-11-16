@@ -8,6 +8,8 @@ import type { CompanyLawLine } from '../company-law/company-law';
 import { fontFaceCssFor, fontStackFor } from './branding/font-catalog';
 import { templateStyleBlock } from './branding/templates';
 import { pdfChromeStrings, PdfChromeStrings } from './language/pdf-chrome-strings';
+import { defaultComposedCountryCatalog } from '../countries/registry';
+import { guessCountryCode } from '@/utils/country-name-to-iso';
 import { DEFAULT_RENDER_LANGUAGE, RenderLanguage } from './language/supported-languages';
 
 /** The EXACT pre-branding values (chantier B, 2026-09-15) — what every render used unconditionally
@@ -491,6 +493,7 @@ export interface RenderDocumentHtmlInput {
   printStatus?: boolean;
   company: PartyAddress & {
     name: string;
+    countryCode?: string | null;
     identifiers?: readonly PartyIdentifierLine[];
     /** The seller's company-law mentions, printed right under its name. */
     companyLaw?: readonly CompanyLawLine[];
@@ -678,7 +681,10 @@ export interface RenderDocumentHtmlInput {
  */
 export function renderDocumentHtml(input: RenderDocumentHtmlInput): string {
   const { descriptor, instance, company, referenceLabels } = input;
-  const strings = pdfChromeStrings(input.language ?? DEFAULT_RENDER_LANGUAGE);
+  const taxKind = defaultComposedCountryCatalog.get(
+    company.countryCode ?? guessCountryCode(company.country ?? undefined) ?? '',
+  )?.taxSystem?.kind;
+  const strings = pdfChromeStrings(input.language ?? DEFAULT_RENDER_LANGUAGE, taxKind);
 
   const createdDate = new Date(instance.createdAt).toISOString().split('T')[0];
 

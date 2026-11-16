@@ -57,7 +57,11 @@ const mockedResolvePresentations = resolveEnabledPaymentMethodPresentations as M
 // synchronous helpers, per this file's own header).
 vi.mock('@/prisma/prisma.service', () => ({
   __esModule: true,
-  default: { company: { findUnique: vi.fn() }, client: { findFirst: vi.fn() } },
+  default: {
+    company: { findUnique: vi.fn() },
+    client: { findFirst: vi.fn() },
+    companyPaymentMethodConfig: { findUnique: vi.fn() },
+  },
 }));
 vi.mock('../company-custom-fields/persistence');
 const mockedResolveCustomFields = resolveDocumentCustomFieldDescriptors as MockedFunction<
@@ -309,6 +313,45 @@ describe('paymentMethodsFor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedResolvePresentations.mockResolvedValue(somePresentations);
+  });
+
+  it('loads NZ details through the real presentation resolver for an NZD invoice', async () => {
+    const actual = await vi.importActual<typeof import('../payment-methods/persistence')>(
+      '../payment-methods/persistence',
+    );
+    mockedResolvePresentations.mockImplementation(actual.resolveEnabledPaymentMethodPresentations);
+    vi.mocked(prisma.company.findUnique).mockResolvedValue({ iban: null, bic: null } as never);
+    vi.mocked(prisma.companyPaymentMethodConfig.findUnique).mockImplementation(async ({ where }) =>
+      where.companyId_methodId?.methodId === 'bank_transfer_nz'
+        ? ({
+            enabled: true,
+            config: { accountName: 'Example Ltd', accountNumber: '12-3456-0123456-000' },
+          } as never)
+        : null,
+    );
+    const result = await paymentMethodsFor(
+      paymentMethodsDescriptor,
+      'company-1',
+      { ...positiveEurTotals, currency: 'NZD' },
+      { currency: 'NZD' },
+      'INV-NZ-1',
+    );
+    expect(result).toEqual([
+      {
+        id: 'bank_transfer_nz',
+        label: 'Bank transfer (New Zealand)',
+        lines: ['Account name: Example Ltd', 'Account number: 12-3456-0123456-000'],
+      },
+    ]);
+    expect(
+      await sepaPaymentQrFor(
+        { ...paymentMethodsDescriptor, usesPaymentQr: true },
+        { name: 'Example Ltd', iban: null },
+        { ...positiveEurTotals, currency: 'NZD' },
+        { currency: 'NZD' },
+        'INV-NZ-1',
+      ),
+    ).toBeUndefined();
   });
 
   it('never calls the resolver at all when the type does not opt in -- the exact same gate usesPaymentQr holds', async () => {

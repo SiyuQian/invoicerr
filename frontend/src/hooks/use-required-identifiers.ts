@@ -17,6 +17,7 @@ export interface IdentifierRequirement {
 // error state a form needs to explain).
 export interface RequiredIdentifiersResult {
   requirements: IdentifierRequirement[]
+  taxKind?: "GST"
   reason?: string
 }
 

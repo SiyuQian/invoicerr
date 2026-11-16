@@ -44,7 +44,8 @@ describe("Demo mode (issue #533)", () => {
 	it("signs a fresh visitor in automatically, with no click, and lands on the dashboard", () => {
 		cy.intercept("POST", "**/api/auth/sign-in/email").as("signIn");
 		cy.visit("/documents/invoice");
-		cy.wait("@signIn")
+		// The first visit includes cold Vite route loading before auto sign-in can start.
+		cy.wait("@signIn", { requestTimeout: 20000 })
 			.its("request.body")
 			.should("include", { email: DEMO_EMAIL, password: DEMO_PASSWORD });
 		cy.url({ timeout: 20000 }).should("include", "/dashboard");

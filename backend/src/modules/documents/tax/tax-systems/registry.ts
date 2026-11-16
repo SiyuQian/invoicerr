@@ -77,6 +77,7 @@ function toTaxSystemSpec(fact: CountryTaxSystemFact, catalog: VatRateCatalog): T
     reducedRates: fact.reducedRates ?? derived?.reducedRates ?? [],
     schemes: fact.schemes ?? ['STANDARD'],
     hasDomesticZeroRate: fact.hasDomesticZeroRate,
+    ...(fact.crossBorderTreatment ? { crossBorderTreatment: fact.crossBorderTreatment } : {}),
   };
 }
 

@@ -71,7 +71,10 @@ async function loadBankTransferConfig(companyId: string): Promise<Record<string,
  *  `configured` the screen read a moment ago is not a lock against another tab, or the config,
  *  changing in between). */
 function validationErrorsFor(method: PaymentMethodDescriptor, config: Record<string, unknown>) {
-  return validateAgainstDescriptor(method.fields, config, fieldKindRegistry);
+  return [
+    ...validateAgainstDescriptor(method.fields, config, fieldKindRegistry),
+    ...(method.validateConfig?.(config) ?? []),
+  ];
 }
 
 async function loadOne(companyId: string, method: PaymentMethodDescriptor): Promise<PaymentMethodConfigView> {
@@ -139,6 +142,12 @@ export async function updateCompanyPaymentMethodConfig(
   methodId: string,
   input: UpdatePaymentMethodConfigInput,
 ): Promise<PaymentMethodConfigView> {
+  if (
+    input.config !== undefined &&
+    (input.config === null || typeof input.config !== 'object' || Array.isArray(input.config))
+  ) {
+    throw new BadRequestException('Payment method config must be an object.');
+  }
   const method = resolveMethodOrThrow(methodId);
   const existing = await loadOne(companyId, method);
   const enabled = input.enabled ?? existing.enabled;

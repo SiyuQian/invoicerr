@@ -227,6 +227,10 @@ One image, two roles. `entrypoint.sh` switches on `ROLE`: default `api` runs ngi
 `docker-compose.scale.yml` sets it to `false` and scales dedicated workers. Redis is required for
 the backend to boot at all, which is why every CI job that starts the backend provisions one.
 
+Keep operator- or instance-specific deployment manifests, private image publishing workflows,
+hostnames, infrastructure identifiers and operational runbooks out of this repository. Manage them
+in the operator's private infrastructure repository. Generic self-hosting templates are allowed.
+
 ### Frontend
 Routes are file-based (`@generouted/react-router`): `src/pages/(app)/…` behind `_layout.tsx`,
 `src/pages/auth/…` public; `src/router.ts` is **generated — do not edit**. Data access is

@@ -1,73 +1,65 @@
 ---
-title: "New Zealand e-invoicing"
-description: "New Zealand's Peppol PINT A-NZ e-invoicing framework, and what adding New Zealand to Invoicerr would involve. Invoicerr does not support New Zealand today."
+title: "New Zealand invoicing"
+description: "New Zealand GST invoicing over PDF and email, with separate PINT A-NZ and Peppol limitations."
 sidebar_label: "New Zealand"
-keywords: [PINT A-NZ, New Zealand e-invoicing, Peppol New Zealand, NZBN e-invoicing, New Zealand invoice XML]
+keywords: [New Zealand, GST, NZBN, PINT A-NZ, Peppol]
 ---
 
-# New Zealand e-invoicing
+# New Zealand invoicing
 
-:::warning[Invoicerr does not support New Zealand]
-No New Zealand data file exists anywhere in this repository — no country policy, no identifiers, no
-tax system, no transmission channel. **Nothing on this page is implemented.** It is here so that
-someone who wants New Zealand support knows what adding it would involve. The countries Invoicerr
-does cover are listed in the [country directory](./index.md).
-:::
+New Zealand supports ordinary PDF and email invoices through the shared document lifecycle.
+Its rules live in `backend/src/modules/documents/countries/data/nz.json` and are loaded automatically.
+No additional dependency, transport or database migration is needed. Restart the backend after adding
+this file so the country rules and identifier catalog are copied into the build and seeded at boot.
 
-New Zealand exchanges e-invoices over the Peppol Network, using the **Peppol PINT A-NZ** format
-shared with Australia under the Trans-Tasman framework. The Ministry of Business, Innovation and
-Employment runs the country's Peppol framework, and larger government agencies must be able to send
-and receive e-invoices.
+## Implemented
 
-## What supporting New Zealand would involve
+- GST rate choices: standard 15%, eligible zero-rated supplies, and exempt supplies. Zero-rated and
+  exempt choices have distinct catalog ids even though both calculate 0%.
+- Optional NZBN and GST number fields. NZBN is not a GST number. The existing NZBN registry provider
+  remains available when `NZBN_API_KEY` is configured.
+- Registered sellers must supply a GST number before issuing an invoice. This product requires it
+  even on invoices at or below NZ$200, where IRD permits simpler supply information.
+- Unregistered sellers select **Not registered for GST** in onboarding or company settings. This
+  reuses `Company.exemptVat` and ensures invoices charge no GST. Do not use this setting for a
+  GST-registered business merely because some of its supplies are zero-rated or exempt.
+- GST terminology on document line fields and the PDF tax breakdown.
+- NZD for domestic invoices, using the shared country currency gate. Foreign-currency GST conversion
+  is outside this integration.
+- Overseas sales retain the seller-selected GST treatment. A foreign customer address alone does
+  not establish zero-rating eligibility. The application does not determine export eligibility,
+  place of supply, or overseas registration obligations, and applies no EU VAT export/reverse-charge
+  inference to these invoices.
+- Linked credit notes identify the original invoice. The other correction routes remain explicitly
+  unverified unless supported by the catalog's cited sources.
+- Seven years' record retention after an unknown period end, conservatively calculated as the invoice
+  issue date plus one year plus seven years. The app does not store the seller's GST period, so this
+  can retain records longer than the statutory minimum. An IRD extension must be handled separately.
 
-| | |
-|---|---|
-| **System** | Peppol Network, using the PINT A-NZ specification (shared with Australia) |
-| **Authority** | MBIE — Ministry of Business, Innovation and Employment |
-| **Format** | EN 16931 (Peppol BIS). This repository already builds and validates it (`formats/peppol-bis-provider.ts`, `formats/ubl-provider.ts`), so the format would not have to be written from scratch. |
-| **Transmission** | Peppol Access Point. The Peppol transport was removed from this repository on 2026-09-15 for want of a real Access Point account, so one would have to be built. |
+The shared issuance gate already requires each buyer's name, address and city. This exceeds the
+buyer-identification minimum for GST-registered buyers above NZ$1,000; it also applies to smaller
+invoices and unregistered buyers as an existing product requirement. Invoices show net, GST and
+payable totals using the existing amount and rounding code.
 
-:::note[Inherited, unverified]
-Carried over from an earlier research pass in this repository's own history, and never checked
-against a primary source. Leads, not facts — confirm every line before writing it into a data file.
+## Separate electronic-invoicing work
 
-- Central agencies must already be able to receive Peppol invoices; larger agencies must send and
-  receive from January 2026.
-- Large suppliers are expected to be required to send e-invoices to government from 2027.
-- Standard GST rate is 15 percent.
-:::
+NZ XML downloads are not enabled. Existing European Peppol BIS output is not a PINT A-NZ implementation.
+Sending or receiving NZ Peppol invoices needs a PINT A-NZ format and validation provider plus a tested
+Access Point integration. The existing Billit transport is a possible starting point; its NZ
+onboarding, PINT A-NZ capability and production authorization have not been verified.
 
-## Which catalogues a contributor would add
+Government procurement eInvoicing obligations are not covered by ordinary email delivery. The
+2027 large-supplier requirement must be evaluated against the relevant procurement and contract,
+not treated as a universal mandate for all NZ businesses.
 
-Adding a country is data, not code. [Adding a country](../adding-a-country.md) is the procedure and
-the contract each section has to satisfy; this is only the shopping list of sections New Zealand would need in
-`countries/data/nz.json`.
+## Official references
 
-- `policy` - which document actions New Zealand allows. Start here: without this
-  section every action is refused with a 403, naming the country.
-- `identifiers` - which national identifier a party must carry.
-- `taxSystem` and `vatRates` - the tax kind, and the rate ladder
-  offered on an invoice line.
-- `correctionRoutes` - all eleven canonical correction routes, `unverified` where
-  unresearched, never omitted.
-- `b2gRouting` - the channel and format a public buyer in New Zealand requires.
-- `channelPolicy` - whether a channel is legally required of a seller
-  established in New Zealand, and from what date.
-- `retention` - how long an archived document is kept, and what the duration is
-  counted from.
-
-Add `mentions`, `contentRequirements`, `countryFields`, `reporting` and
-`domesticReverseCharge` sections only where the law actually gives them content.
-
-Data alone will not finish the job here: the Peppol network is a transmission channel this
-repository does not implement, which is code, not a JSON file — see [When a country needs more than
-a file](../adding-a-country.md).
-
-## Want New Zealand supported?
-
-Check the [open compliance
-issues](https://github.com/invoicerr-app/invoicerr/issues?q=is%3Aissue+label%3Acompliance) first. If
-there is no issue for New Zealand, [open
-one](https://github.com/invoicerr-app/invoicerr/issues/new?template=country_rule.yml) and name which of the files above
-you need — a request that names one mechanism is far more actionable than "please add New Zealand".
+- [IRD: charging GST](https://www.ird.govt.nz/gst/charging-gst)
+- [IRD: Smart business (IR320)](https://www.ird.govt.nz/-/media/project/ir/home/documents/forms-and-guides/ir300---ir399/ir320/ir320.pdf) — New Zealand currency for invoices.
+- [IRD: taxable supply information](https://www.ird.govt.nz/gst/tax-invoices-for-gst/how-tax-invoices-for-gst-work)
+- [IRD: zero-rated supplies](https://www.ird.govt.nz/gst/charging-gst/zero-rated-supplies)
+- [IRD: exempt supplies](https://www.ird.govt.nz/gst/charging-gst/exempt-supplies)
+- [IRD: supply corrections](https://www.ird.govt.nz/gst/tax-invoices-for-gst/credit-and-debit-notes)
+- [IRD: record keeping](https://www.ird.govt.nz/records) — includes approval requirements for offshore storage.
+- [PINT A-NZ specification](https://docs.peppol.eu/poac/aunz/pint-aunz/)
+- [MBIE: businesses trading with government](https://www.einvoicing.govt.nz/get-set-up/advice-for-government-agencies/advice-for-businesses-trading-with-government)

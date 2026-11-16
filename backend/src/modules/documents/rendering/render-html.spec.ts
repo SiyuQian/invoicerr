@@ -1,3 +1,4 @@
+import { nzBankTransferPaymentMethod } from '../payment-methods/nz-bank-transfer.descriptor';
 import { renderDocumentHtml } from './render-html';
 import { DocumentTypeDescriptor } from '../descriptors/types';
 
@@ -1146,6 +1147,27 @@ describe('renderDocumentHtml', () => {
   });
 
   describe('payment methods', () => {
+    it('prints NZ account details from the descriptor with escaped names and no IBAN label', () => {
+      const html = renderDocumentHtml({
+        descriptor: { id: 'invoice', label: 'Invoice', fields: [], actions: [] },
+        instance: baseInstance,
+        company: baseCompany,
+        referenceLabels: {},
+        paymentMethods: [
+          nzBankTransferPaymentMethod.present({
+            config: {
+              accountName: 'Example <Ltd> & "Co"',
+              accountNumber: '12-3456-0123456-000',
+            },
+          }),
+        ],
+      });
+      expect(html).toContain('Account number: 12-3456-0123456-000');
+      expect(html).toContain('Example &lt;Ltd&gt; &amp; &quot;Co&quot;');
+      expect(html).not.toContain('IBAN:');
+      expect(html).not.toContain('Bank name:');
+    });
+
     it('renders one item per presentation — label, lines, and a link when present', () => {
       const html = renderDocumentHtml({
         descriptor: { id: 'invoice', label: 'Invoice', fields: [], actions: [] },

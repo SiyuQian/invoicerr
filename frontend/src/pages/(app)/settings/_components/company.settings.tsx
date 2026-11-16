@@ -1350,8 +1350,16 @@ export default function CompanySettings() {
               name="exemptVat"
               render={({ field }) => (
                 <FormItem className="flex flex-col space-y-3">
-                  <FormLabel description={t("settings.company.form.exemptVat.description")}>
-                    {t("settings.company.form.exemptVat.label")}
+                  <FormLabel
+                    description={
+                      requiredIdentifiersResult?.taxKind === "GST"
+                        ? t("settings.company.form.gstNotRegistered.description")
+                        : t("settings.company.form.exemptVat.description")
+                    }
+                  >
+                    {requiredIdentifiersResult?.taxKind === "GST"
+                      ? t("settings.company.form.gstNotRegistered.label")
+                      : t("settings.company.form.exemptVat.label")}
                   </FormLabel>
                   <FormControl>
                     <Switch

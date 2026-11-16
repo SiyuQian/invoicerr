@@ -1,4 +1,5 @@
 import { DocumentFieldDescriptor } from '../descriptors/types';
+import { ValidationError } from '../descriptors/validate';
 
 /**
  * A PAYMENT METHOD descriptor — the whole contract for one way a company can accept payment (bank
@@ -33,6 +34,8 @@ export interface PaymentMethodDescriptor {
    * empty case works, for two different reasons (see each file's own header).
    */
   fields: DocumentFieldDescriptor[];
+  /** Additional format checks, shared by configuration reads and activation writes. */
+  validateConfig?(config: Record<string, unknown>): ValidationError[];
   /**
    * Resolves what this method shows a payer, given this company's own configured values (and,
    * optionally, one document's own amount/currency/reference — see `PaymentMethodRenderContext`).

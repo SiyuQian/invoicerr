@@ -154,6 +154,29 @@ exports[`generatePartyIdentifiers > produces a stable identifier set for every d
       ],
     ],
   },
+  "NZ": {
+    "nextDraw": 0.6011037519201636,
+    "parties": [
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+    ],
+  },
   "PL": {
     "nextDraw": 0.7835472931619734,
     "parties": [
@@ -369,6 +392,29 @@ exports[`generatePartyIdentifiers > produces a stable identifier set for every d
       ],
     ],
   },
+  "NZ": {
+    "nextDraw": 0.7166367711033672,
+    "parties": [
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+    ],
+  },
   "PL": {
     "nextDraw": 0.4787502675317228,
     "parties": [
@@ -580,6 +626,29 @@ exports[`generatePartyIdentifiers > produces a stable identifier set for every d
         {
           "scheme": "VAT",
           "value": "20479582015",
+        },
+      ],
+    ],
+  },
+  "NZ": {
+    "nextDraw": 0.007117459084838629,
+    "parties": [
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
+        },
+      ],
+      [
+        {
+          "scheme": "VAT",
+          "value": "049091850",
         },
       ],
     ],

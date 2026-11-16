@@ -111,6 +111,18 @@ describe('countries/compose: section coverage per country (pinned on purpose, se
         'companyLaw',
         'codeLists',
       ],
+      NZ: [
+        'policy',
+        'identifiers',
+        'correctionRoutes',
+        'vatRates',
+        'taxSystem',
+        'channelPolicy',
+        'retention',
+        'localizedMentions',
+        'countryFields',
+        'companyLookup',
+      ],
       PL: [
         'policy',
         'identifiers',
@@ -151,7 +163,7 @@ describe('countries/compose: section coverage per country (pinned on purpose, se
   });
 
   it('every one of the six shipped countries has at least a policy section (the minimum to be "supported" at all)', () => {
-    for (const code of ['DE', 'DZ', 'FR', 'IT', 'PL', 'PT']) {
+    for (const code of ['DE', 'DZ', 'FR', 'IT', 'NZ', 'PL', 'PT']) {
       expect(composedFor(code).policy).toBeDefined();
     }
   });

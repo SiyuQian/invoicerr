@@ -280,10 +280,39 @@ export function validateEsVat(value: string): IdentifierValidationResult {
 // Generic VAT dispatcher (routes by country prefix in the VAT number)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** IRD Payroll Calculations & Business Rules 2026, §6.1 (ird.govt.nz): two-pass modulus 11. */
+function validateNzGst(value: string): IdentifierValidationResult {
+  const clean = value.replace(/[\s-]/g, '').toUpperCase().replace(/^NZ/, '');
+  if (!/^\d{8,9}$/.test(clean) || Number(clean) < 10_000_000 || Number(clean) > 200_000_000) {
+    return {
+      scheme: 'VAT',
+      value,
+      valid: false,
+      checksumValidated: false,
+      reason: 'NZ GST number must contain 8 or 9 digits in the IRD range 10,000,000–200,000,000',
+    };
+  }
+  const digits = [...clean.padStart(9, '0')].map(Number);
+  const check = (weights: number[]) =>
+    (11 - (weights.reduce((sum, weight, i) => sum + weight * digits[i], 0) % 11)) % 11;
+  const primary = check([3, 2, 7, 6, 5, 4, 3, 2]);
+  const expected = primary === 10 ? check([7, 4, 3, 2, 5, 2, 7, 6]) : primary;
+  const valid = expected < 10 && expected === digits[8];
+  return {
+    scheme: 'VAT',
+    value,
+    valid,
+    checksumValidated: true,
+    reason: valid ? undefined : 'NZ GST/IRD weighted checksum failed',
+  };
+}
+
 export function validateVat(value: string, countryHint?: string): IdentifierValidationResult {
   const clean = value.replace(/[\s-]/g, '').toUpperCase();
   const country = (countryHint?.toUpperCase() ?? clean.slice(0, 2)) as string;
   switch (country) {
+    case 'NZ':
+      return validateNzGst(value);
     case 'FR':
       return validateFrVat(clean);
     case 'IT': {

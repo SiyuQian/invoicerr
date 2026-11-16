@@ -45,7 +45,7 @@ function createClient() {
 		.its("body.id");
 }
 
-function createInvoiceDraft(clientId: string) {
+function createInvoiceDraft(clientId: string, currency = "EUR", vatRate = "20") {
 	return cy
 		.request({
 			method: "POST",
@@ -55,8 +55,8 @@ function createInvoiceDraft(clientId: string) {
 					client: clientId,
 					issueDate: "2026-08-30",
 					dueDate: "2026-09-30",
-					currency: "EUR",
-					lines: [{ description: "Consulting", quantity: 1, unit: "day", unitPrice: 1000, vatRate: "20" }],
+					currency,
+					lines: [{ description: "Consulting", quantity: 1, unit: "day", unitPrice: 1000, vatRate }],
 				},
 			},
 		})
@@ -98,13 +98,13 @@ describe("Payment methods — configured through the screen, rendered differentl
 		cy.login();
 	});
 
-	it("the screen offers all five built-in methods, every one disabled on a freshly seeded company", () => {
+	it("the screen offers all seven built-in methods, every one disabled on a freshly seeded company", () => {
 		cy.visit("/dashboard");
 		cy.get('[data-cy="sidebar-payment-methods-link"]').click();
 		cy.location("pathname").should("eq", "/payment-methods");
 
 		cy.get('[data-cy="payment-methods-list"]', { timeout: 15000 }).should("be.visible");
-		for (const id of ["bank_transfer", "paypal", "cash", "cheque", "stripe"]) {
+		for (const id of ["bank_transfer", "bank_transfer_nz", "paypal", "cash", "cheque", "stripe", "mollie"]) {
 			cy.get(`[data-cy="payment-method-card-${id}"]`).should("be.visible");
 			cy.get(`[data-cy="payment-method-status-${id}"]`).should("contain.text", "Disabled");
 		}
@@ -115,7 +115,7 @@ describe("Payment methods — configured through the screen, rendered differentl
 			.its("body")
 			.then((methods: { id: string; configured: boolean }[]) => {
 				// A method with a required field nobody has filled in yet — not configured.
-				for (const id of ["bank_transfer", "paypal", "cheque"]) {
+				for (const id of ["bank_transfer", "bank_transfer_nz", "paypal", "cheque"]) {
 					expect(methods.find((m) => m.id === id)?.configured, id).to.eq(false);
 				}
 				// A method with no fields at all — nothing can be missing, so always configured.
@@ -273,4 +273,150 @@ describe("Payment methods — configured through the screen, rendered differentl
 				},
 			);
 	});
+	it("configures NZ transfers, rejects invalid edits and prints the same details in an NZD PDF and email", () => {
+		const config = {
+			accountName: 'Te Whānau <Ltd> & "Co"',
+			accountNumber: "12-3456-0123456-000",
+			bankName: "Example Bank",
+		};
+		cy.visit("/payment-methods");
+		cy.get('[data-cy="payment-method-toggle-bank_transfer_nz"]').click();
+		cy.get('[data-cy="document-field-accountName-input"]').type(
+			config.accountName,
+			{ parseSpecialCharSequences: false },
+		);
+		cy.get('[data-cy="document-field-accountNumber-input"]').type("invalid");
+		cy.get('[data-cy="payment-method-config-save"]').click();
+		cy.get('[data-cy="document-field-accountNumber-input"]')
+			.should("have.attr", "aria-invalid", "true")
+			.clear()
+			.type(config.accountNumber);
+		cy.get('[data-cy="document-field-bankName-input"]').type(config.bankName);
+		cy.get('[data-cy="payment-method-config-save"]').click();
+		cy.get('[data-cy="payment-method-config-dialog"]').should("not.exist");
+		cy.reload();
+		cy.get('[data-cy="payment-method-preview-bank_transfer_nz"]').should(
+			"contain.text",
+			config.accountNumber,
+		);
+		cy.get('[data-cy="payment-method-configure-bank_transfer_nz"]').click();
+		cy.get('[data-cy="document-field-accountNumber-input"]').should(
+			"have.value",
+			config.accountNumber,
+		);
+		cy.get('[data-cy="document-field-accountName-input"]').should(
+			"have.value",
+			config.accountName,
+		);
+		cy.get('[data-cy="payment-method-config-cancel"]').click();
+		cy.screenshot("nz-bank-transfer-configured");
+
+		cy.request({
+			method: "PATCH",
+			url: `${api}/api/payment-methods/bank_transfer_nz`,
+			failOnStatusCode: false,
+			body: { config: { ...config, accountNumber: "12-3456-0123456-0" } },
+		})
+			.its("status")
+			.should("eq", 400);
+		for (const enabled of [false, true]) {
+			cy.request({
+				method: "PATCH",
+				url: `${api}/api/payment-methods/bank_transfer_nz`,
+				body: { enabled },
+			});
+		}
+		cy.request(`${api}/api/payment-methods`)
+			.its("body")
+			.then((methods: { id: string; config: unknown; enabled: boolean }[]) => {
+				expect(methods.find((m) => m.id === "bank_transfer_nz")).to.include({
+					enabled: true,
+				});
+				expect(
+					methods.find((m) => m.id === "bank_transfer_nz")?.config,
+				).to.deep.equal(config);
+			});
+		cy.request({
+			method: "PATCH",
+			url: `${api}/api/payment-methods/bank_transfer`,
+			body: { enabled: false },
+		});
+		cy.request({
+			method: "POST",
+			url: `${api}/api/company/info`,
+			body: {
+				invoiceTransportId: "email", name: "Example NZ Ltd", country: "New Zealand", countryCode: "NZ",
+				address: "1 Example Street", city: "Auckland", postalCode: "1010", exemptVat: true, identifiers: [],
+			},
+		});
+		cy.request({
+			method: "PUT",
+			url: `${api}/api/documents/types/invoice/email-template`,
+			body: {
+				subject: "NZ transfer {displayNumber}",
+				body: "Your invoice is attached.",
+				html: "<p>Your invoice is attached.</p>",
+			},
+		});
+		cy.clearEmails();
+		createClient().then((clientId: string) => {
+			createInvoiceDraft(clientId, "NZD", "0").then((id) => {
+				pdfText(id).then((text) => {
+					expect(text).to.contain(`Account number: ${config.accountNumber}`);
+					expect(text).to.contain("Bank name: Example Bank");
+					expect(text).not.to.contain("IBAN:");
+				});
+				fetchInvoicePdf(id).then((binary) =>
+					cy.writeFile(
+						"cypress/downloads/nz-bank-transfer.pdf",
+						binary,
+						"binary",
+					),
+				);
+				cy.request(`${api}/api/documents/${id}?typeId=invoice`).then(({ body }) => {
+					cy.request({
+						method: "POST",
+						url: `${api}/api/documents/types/invoice/actions/send`,
+						body: { documentId: id, data: body.data },
+					});
+				});
+				cy.waitForDocumentStatus(`${api}/api/documents/${id}?typeId=invoice`, [
+					"sent",
+				]);
+				fetchInvoicePdf(id).then((binary) => cy.writeFile("cypress/downloads/nz-bank-transfer.pdf", binary, "binary"));
+				cy.request(`${api}/api/documents/${id}/settlement?typeId=invoice`)
+					.its("body.settlement.paidMinor").should("eq", 0);
+				cy.request(`${api}/api/documents/${id}?typeId=invoice`).then(({ body }) => {
+					cy.request({
+						method: "POST",
+						url: `${api}/api/documents/types/invoice/actions/record-payment`,
+						body: { documentId: id, data: body.data, params: {
+							amount: 1, currency: "NZD", paidAt: "2026-08-30", method: "bank_transfer_nz",
+						} },
+					});
+				});
+				cy.request(`${api}/api/documents/${id}/settlement?typeId=invoice`).then(({ body }) => {
+					expect(body.settlement.paidMinor).to.equal(100);
+					expect(body.payments[0].method).to.equal("bank_transfer_nz");
+				});
+				cy.getLastEmail().then((message) => {
+					expect(message.Subject).to.contain("NZ transfer");
+					expect(message.Text).to.contain(
+						`Account number: ${config.accountNumber}`,
+					);
+					expect(message.HTML).to.contain(
+						`Account number: ${config.accountNumber}`,
+					);
+					expect(message.HTML).to.contain("&lt;Ltd&gt;");
+					expect(message.HTML).not.to.contain("IBAN:");
+					cy.writeFile("cypress/downloads/nz-bank-transfer-email.json", {
+						Subject: message.Subject,
+						Text: message.Text,
+						HTML: message.HTML,
+					});
+				});
+			});
+		});
+	});
+
 });

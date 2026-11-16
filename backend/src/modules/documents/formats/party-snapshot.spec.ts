@@ -1,6 +1,6 @@
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
 import { ciiFormatProvider } from './cii-provider';
-import { clientToFormatParty } from './party-snapshot';
+import { clientToFormatParty, companyToFormatParty } from './party-snapshot';
 import { ublFormatProvider } from './ubl-provider';
 
 const seller = {
@@ -69,4 +69,21 @@ describe('a client with no address, city or postal code', () => {
     },
     30_000,
   );
+});
+
+describe('NZ payment configuration stays separate from IBAN output', () => {
+  it.each([null, 'FR1420041010050500013M02606'])('preserves the company IBAN %j', (iban) => {
+    const company = {
+      ...seller,
+      exemptVat: false,
+      iban,
+      paymentMethods: [
+        {
+          methodId: 'bank_transfer_nz',
+          config: { accountName: 'Example Ltd', accountNumber: '12-3456-0123456-000' },
+        },
+      ],
+    };
+    expect(companyToFormatParty(company).iban).toBe(iban);
+  });
 });

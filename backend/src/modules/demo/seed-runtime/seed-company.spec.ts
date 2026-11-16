@@ -33,6 +33,7 @@ describe('domesticCurrencyFor', () => {
     ['DZ', 'DZD'],
     ['FR', 'EUR'],
     ['IT', 'EUR'],
+    ['NZ', 'NZD'],
     ['PL', 'PLN'],
     ['PT', 'EUR'],
   ] as const)('%s bills its domestic documents in %s', (countryCode, currency) => {
@@ -113,7 +114,7 @@ function fakeDocumentsService() {
   return { docs, payments, credits, service: { runAction, getSettlement } };
 }
 
-async function seedWithFake(countryCode: 'DE' | 'DZ' | 'FR' | 'IT' | 'PL' | 'PT' = 'DE') {
+async function seedWithFake(countryCode: 'DE' | 'DZ' | 'FR' | 'IT' | 'PL' | 'PT' | 'NZ' = 'DE') {
   const fake = fakeDocumentsService();
   let clientCount = 0;
 
@@ -133,6 +134,21 @@ async function seedWithFake(countryCode: 'DE' | 'DZ' | 'FR' | 'IT' | 'PL' | 'PT'
   );
   return fake;
 }
+
+describe('seedCountryCompany: New Zealand', () => {
+  it('seeds domestic invoices in NZD with GST and linked credit notes', async () => {
+    const fake = await seedWithFake('NZ');
+    const invoices = [...fake.docs.values()].filter((doc) => doc.typeId === 'invoice');
+    expect(invoices.length).toBeGreaterThan(0);
+    expect(invoices.every((doc) => doc.data.currency === 'NZD')).toBe(true);
+    expect(
+      invoices.some((doc) => computeDocumentTotals(buildInvoiceDescriptor(), doc.data).vatMinor > 0),
+    ).toBe(true);
+    const notes = [...fake.docs.values()].filter((doc) => doc.typeId === 'credit-note');
+    expect(notes.length).toBeGreaterThan(0);
+    expect(notes.every((doc) => fake.docs.get(doc.data.invoice as string)?.typeId === 'invoice')).toBe(true);
+  });
+});
 
 describe('seedCountryCompany: credit notes', () => {
   it('seeds only credit notes that correct an invoice, so each one has a client to be sent to', async () => {

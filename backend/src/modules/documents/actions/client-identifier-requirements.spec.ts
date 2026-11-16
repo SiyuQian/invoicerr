@@ -44,6 +44,7 @@ const EXPECTED: Record<string, { form: Asked; issuance: Asked }> = {
     form: { COMPANY: ['VAT'], INDIVIDUAL: ['LEGAL_ID'] },
     issuance: { COMPANY: ['VAT'], INDIVIDUAL: ['LEGAL_ID'] },
   },
+  NZ: { form: { COMPANY: [], INDIVIDUAL: [] }, issuance: { COMPANY: [], INDIVIDUAL: [] } },
   PL: {
     form: { COMPANY: ['LEGAL_ID'], INDIVIDUAL: [] },
     issuance: { COMPANY: ['LEGAL_ID'], INDIVIDUAL: [] },
@@ -59,6 +60,7 @@ const COUNTRY_NAMES: Record<string, string> = {
   DZ: 'Algeria',
   FR: 'France',
   IT: 'Italy',
+  NZ: 'New Zealand',
   PL: 'Poland',
   PT: 'Portugal',
 };
