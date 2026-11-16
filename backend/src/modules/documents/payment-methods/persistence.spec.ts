@@ -187,17 +187,15 @@ describe('payment-methods/persistence', () => {
       expect(rows.get('bank_transfer_nz')).toEqual({ config, enabled: false });
     });
 
-    it.each([
-      null,
-      [],
-      1,
-      'bad',
-    ])('rejects a non-object config %j even for a disabled method', async (config) => {
-      await expect(updateCompanyPaymentMethodConfig(COMPANY_ID, 'cash', { config } as never)).rejects.toThrow(
-        BadRequestException,
-      );
-      expect(mockedPrisma.companyPaymentMethodConfig.upsert).not.toHaveBeenCalled();
-    });
+    it.each([null, [], 1, 'bad'])(
+      'rejects a non-object config %j even for a disabled method',
+      async (config) => {
+        await expect(
+          updateCompanyPaymentMethodConfig(COMPANY_ID, 'cash', { config } as never),
+        ).rejects.toThrow(BadRequestException);
+        expect(mockedPrisma.companyPaymentMethodConfig.upsert).not.toHaveBeenCalled();
+      },
+    );
   });
 
   it('applies client restrictions independently to the two bank transfer methods', async () => {

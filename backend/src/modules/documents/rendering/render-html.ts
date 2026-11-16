@@ -7,7 +7,7 @@ import type { DocumentTotals } from '../totals/compute-totals';
 import type { CompanyLawLine } from '../company-law/company-law';
 import { fontFaceCssFor, fontStackFor } from './branding/font-catalog';
 import { templateStyleBlock } from './branding/templates';
-import { pdfChromeStrings, PdfChromeStrings } from './language/pdf-chrome-strings';
+import { lineColumnHeader, pdfChromeStrings, PdfChromeStrings } from './language/pdf-chrome-strings';
 import { defaultComposedCountryCatalog } from '../countries/registry';
 import { guessCountryCode } from '@/utils/country-name-to-iso';
 import { DEFAULT_RENDER_LANGUAGE, RenderLanguage } from './language/supported-languages';
@@ -167,7 +167,7 @@ function renderFieldValue(
       // Header
       html += '<thead><tr style="border-bottom: 1px solid #ccc;">';
       for (const subField of subFields) {
-        html += `<th style="text-align: left; font-weight: bold;">${escapeHtmlSafe(subField.label)}</th>`;
+        html += `<th style="text-align: left; font-weight: bold;">${escapeHtmlSafe(lineColumnHeader(subField, strings))}</th>`;
       }
       html += '</tr></thead>';
       // Body
