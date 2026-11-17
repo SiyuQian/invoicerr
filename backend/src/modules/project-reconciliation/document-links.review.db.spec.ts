@@ -351,17 +351,17 @@ describe('document-links and review real Postgres', () => {
     await expect(linking).rejects.toMatchObject({ status: 404 });
     expect(await prisma.projectDocumentLink.count({ where: { companyId, documentId: d.id } })).toBe(0);
   });
-  it.each([
-    'VERIFY',
-    'ACCEPT_EXCEPTIONS',
-  ] as const)('known own outstanding1 hard-blocks %s and never alters balances', async (mode) => {
-    const d = await doc();
-    await payment(d.id, 99);
-    await link(d.id);
-    const before = await sourceState();
-    await expect(review(mode)).rejects.toMatchObject({ response: { code: 'REVIEW_BLOCKED' }, status: 409 });
-    expect(await sourceState()).toEqual(before);
-  });
+  it.each(['VERIFY', 'ACCEPT_EXCEPTIONS'] as const)(
+    'known own outstanding1 hard-blocks %s and never alters balances',
+    async (mode) => {
+      const d = await doc();
+      await payment(d.id, 99);
+      await link(d.id);
+      const before = await sourceState();
+      await expect(review(mode)).rejects.toMatchObject({ response: { code: 'REVIEW_BLOCKED' }, status: 409 });
+      expect(await sourceState()).toEqual(before);
+    },
+  );
   it('stores exact historical exceptions and reasons but keeps attention; rejects changed/omitted fingerprints', async () => {
     const own = await doc();
     await payment(own.id);
@@ -637,37 +637,38 @@ describe('document-links and review real Postgres', () => {
       response: { code: 'REVIEW_BLOCKED', params: { condition: 'DATE_AFTER_COVERAGE', recordId: inv.id } },
     });
   });
-  it.each([
-    'missing-link',
-    'draft',
-    'difference',
-  ] as const)('cannot accept non-overridable %s discrepancies', async (kind) => {
-    if (kind !== 'missing-link') {
-      const own = await doc('invoice', kind === 'draft' ? 'draft' : 'sent');
-      await payment(own.id);
-      await link(own.id);
-      const bill = await doc('received-invoice', 'received', { grossAmount: 1 });
-      await payment(bill.id);
-      await link(bill.id, 'PARTNER_BILL', 'received-invoice');
-      if (kind === 'difference')
-        await core.updateCase(
-          companyId,
-          projectId,
-          caseId,
-          { agreedGrossMinor: 101, agreementReference: 'Explicit101' },
-          await context(),
-        );
-    }
-    const current = projectReview(await snapshot()).cases.find((c) => c.caseId === caseId)!;
-    expect(current.exceptions.map((e) => e.code)).toContain(
-      kind === 'missing-link'
-        ? 'CUSTOMER_INVOICE_MISSING'
-        : kind === 'draft'
-          ? 'DOCUMENT_NOT_ISSUED'
-          : 'SETTLEMENT_DIFFERENCE',
-    );
-    await expect(review('ACCEPT_EXCEPTIONS')).rejects.toMatchObject({ response: { code: 'REVIEW_BLOCKED' } });
-  });
+  it.each(['missing-link', 'draft', 'difference'] as const)(
+    'cannot accept non-overridable %s discrepancies',
+    async (kind) => {
+      if (kind !== 'missing-link') {
+        const own = await doc('invoice', kind === 'draft' ? 'draft' : 'sent');
+        await payment(own.id);
+        await link(own.id);
+        const bill = await doc('received-invoice', 'received', { grossAmount: 1 });
+        await payment(bill.id);
+        await link(bill.id, 'PARTNER_BILL', 'received-invoice');
+        if (kind === 'difference')
+          await core.updateCase(
+            companyId,
+            projectId,
+            caseId,
+            { agreedGrossMinor: 101, agreementReference: 'Explicit101' },
+            await context(),
+          );
+      }
+      const current = projectReview(await snapshot()).cases.find((c) => c.caseId === caseId)!;
+      expect(current.exceptions.map((e) => e.code)).toContain(
+        kind === 'missing-link'
+          ? 'CUSTOMER_INVOICE_MISSING'
+          : kind === 'draft'
+            ? 'DOCUMENT_NOT_ISSUED'
+            : 'SETTLEMENT_DIFFERENCE',
+      );
+      await expect(review('ACCEPT_EXCEPTIONS')).rejects.toMatchObject({
+        response: { code: 'REVIEW_BLOCKED' },
+      });
+    },
+  );
   it('reverifies a stale closed case against current sources, but cannot overlook a newly positive balance', async () => {
     await project('COMPANY', false);
     const d = await doc();

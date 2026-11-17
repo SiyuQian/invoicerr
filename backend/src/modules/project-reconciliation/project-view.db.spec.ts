@@ -269,80 +269,76 @@ describe('project-view coherent real Postgres reads', () => {
       cash: 'ownRecordedReceipts',
       outstanding: 'ownOutstanding',
     },
-  ] as const)('retains canonical $cash/$outstanding after $role becomes $status across detail/list/CSV', async ({
-    mode,
-    role,
-    status,
-    issued,
-    cash,
-    outstanding,
-  }) => {
-    await project(mode);
-    const source = await document(role, 10);
-    await pay(source.id, 400);
-    const before = await core.getProject(companyId, projectId);
-    expect(before.summary[issued].knownMinor).toBe(1000);
-    expect(before.summary[cash].knownMinor).toBe(400);
-    expect(before.summary[outstanding].knownMinor).toBe(600);
-    const recordedPayments = await prisma.documentPayment.findMany({
-      where: { companyId, documentId: source.id },
-    });
-    await prisma.documentInstance.update({ where: { id: source.id }, data: { status } });
-    const lifetime = await core.getProject(companyId, projectId);
-    const dated = await core.getProject(companyId, projectId, {
-      cashFrom: '2026-11-01',
-      cashTo: '2026-11-30',
-    });
-    for (const view of [lifetime, dated]) {
-      expect(view.summary[issued]).toEqual({ knownMinor: 0, missingCount: 0, completeness: 'COMPLETE' });
-      expect(view.summary[cash]).toEqual({ knownMinor: 400, missingCount: 0, completeness: 'COMPLETE' });
-      expect(view.summary[outstanding]).toEqual({
-        knownMinor: 600,
-        missingCount: 0,
-        completeness: 'COMPLETE',
+  ] as const)(
+    'retains canonical $cash/$outstanding after $role becomes $status across detail/list/CSV',
+    async ({ mode, role, status, issued, cash, outstanding }) => {
+      await project(mode);
+      const source = await document(role, 10);
+      await pay(source.id, 400);
+      const before = await core.getProject(companyId, projectId);
+      expect(before.summary[issued].knownMinor).toBe(1000);
+      expect(before.summary[cash].knownMinor).toBe(400);
+      expect(before.summary[outstanding].knownMinor).toBe(600);
+      const recordedPayments = await prisma.documentPayment.findMany({
+        where: { companyId, documentId: source.id },
       });
-      expect(view.cases.items[0].summary[cash].knownMinor).toBe(400);
-      expect(view.cases.items[0].summary[outstanding].knownMinor).toBe(600);
-      if (role === 'CUSTOMER_INVOICE') expect(view.summary.customerRemaining.knownMinor).toBe(600);
-      expect(view.cases.items[0].documentLinks[0].financial).toMatchObject({
-        status,
-        settlement: { paidMinor: 400, outstandingMinor: 600, settled: false },
+      await prisma.documentInstance.update({ where: { id: source.id }, data: { status } });
+      const lifetime = await core.getProject(companyId, projectId);
+      const dated = await core.getProject(companyId, projectId, {
+        cashFrom: '2026-11-01',
+        cashTo: '2026-11-30',
       });
-      expect(view.exceptions).toContainEqual(
-        expect.objectContaining({ code: 'DOCUMENT_NOT_ISSUED', blocking: true }),
-      );
-      expect(view.exceptions).toContainEqual(
-        expect.objectContaining({ code: 'OWN_OUTSTANDING', blocking: true }),
-      );
-      expect(view.effectiveReviewState).toBe('OPEN');
-    }
-    const outsideCashWindow = await core.getProject(companyId, projectId, { cashFrom: '2026-12-01' });
-    expect(outsideCashWindow.summary[cash].knownMinor).toBe(0);
-    expect(outsideCashWindow.summary[outstanding].knownMinor).toBe(600);
-    const list = await core.listProjects(companyId, { needsAttention: 'true' });
-    const listed = list.items.find((row) => row.project.id === projectId)!;
-    expect(listed.summary[issued].knownMinor).toBe(0);
-    expect(listed.summary[cash].knownMinor).toBe(400);
-    expect(listed.summary[outstanding].knownMinor).toBe(600);
-    for (const filters of [{}, { cashFrom: '2026-11-01', cashTo: '2026-11-30' }]) {
-      const csv = await core.exportProject(companyId, projectId, filters);
-      for (const [key, amount, basis] of [
-        [issued, 0, 'overall'],
-        [cash, 400, 'cashFrom' in filters ? 'in period: cash date' : 'overall'],
-        [outstanding, 600, 'overall'],
-      ] as const) {
-        const measures = csv.split('\r\n').filter((line) => line.includes(`,measure,,${key},`));
-        expect(measures).toHaveLength(2);
-        for (const line of measures) expect(line).toContain(`${key},${amount},0,COMPLETE,${basis}`);
+      for (const view of [lifetime, dated]) {
+        expect(view.summary[issued]).toEqual({ knownMinor: 0, missingCount: 0, completeness: 'COMPLETE' });
+        expect(view.summary[cash]).toEqual({ knownMinor: 400, missingCount: 0, completeness: 'COMPLETE' });
+        expect(view.summary[outstanding]).toEqual({
+          knownMinor: 600,
+          missingCount: 0,
+          completeness: 'COMPLETE',
+        });
+        expect(view.cases.items[0].summary[cash].knownMinor).toBe(400);
+        expect(view.cases.items[0].summary[outstanding].knownMinor).toBe(600);
+        if (role === 'CUSTOMER_INVOICE') expect(view.summary.customerRemaining.knownMinor).toBe(600);
+        expect(view.cases.items[0].documentLinks[0].financial).toMatchObject({
+          status,
+          settlement: { paidMinor: 400, outstandingMinor: 600, settled: false },
+        });
+        expect(view.exceptions).toContainEqual(
+          expect.objectContaining({ code: 'DOCUMENT_NOT_ISSUED', blocking: true }),
+        );
+        expect(view.exceptions).toContainEqual(
+          expect.objectContaining({ code: 'OWN_OUTSTANDING', blocking: true }),
+        );
+        expect(view.effectiveReviewState).toBe('OPEN');
       }
-    }
-    expect((await prisma.documentInstance.findUniqueOrThrow({ where: { id: source.id } })).data).toEqual(
-      source.data,
-    );
-    expect(await prisma.documentPayment.findMany({ where: { companyId, documentId: source.id } })).toEqual(
-      recordedPayments,
-    );
-  });
+      const outsideCashWindow = await core.getProject(companyId, projectId, { cashFrom: '2026-12-01' });
+      expect(outsideCashWindow.summary[cash].knownMinor).toBe(0);
+      expect(outsideCashWindow.summary[outstanding].knownMinor).toBe(600);
+      const list = await core.listProjects(companyId, { needsAttention: 'true' });
+      const listed = list.items.find((row) => row.project.id === projectId)!;
+      expect(listed.summary[issued].knownMinor).toBe(0);
+      expect(listed.summary[cash].knownMinor).toBe(400);
+      expect(listed.summary[outstanding].knownMinor).toBe(600);
+      for (const filters of [{}, { cashFrom: '2026-11-01', cashTo: '2026-11-30' }]) {
+        const csv = await core.exportProject(companyId, projectId, filters);
+        for (const [key, amount, basis] of [
+          [issued, 0, 'overall'],
+          [cash, 400, 'cashFrom' in filters ? 'in period: cash date' : 'overall'],
+          [outstanding, 600, 'overall'],
+        ] as const) {
+          const measures = csv.split('\r\n').filter((line) => line.includes(`,measure,,${key},`));
+          expect(measures).toHaveLength(2);
+          for (const line of measures) expect(line).toContain(`${key},${amount},0,COMPLETE,${basis}`);
+        }
+      }
+      expect((await prisma.documentInstance.findUniqueOrThrow({ where: { id: source.id } })).data).toEqual(
+        source.data,
+      );
+      expect(await prisma.documentPayment.findMany({ where: { companyId, documentId: source.id } })).toEqual(
+        recordedPayments,
+      );
+    },
+  );
   it('omits undated cash in dated totals while preserving global and off-page allocation context', async () => {
     const i = await invoice();
     const r = await receipt();

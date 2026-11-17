@@ -832,169 +832,170 @@ describe('import real Postgres preview and atomic confirmation', () => {
     expect(locked).toEqual([...locked].sort());
     expect(await state()).toEqual(before);
   });
-  it.each([
-    'status-selected',
-    'status-unselected',
-    'membership-unselected',
-    'insert-unselected',
-  ] as const)('serializes credit input race after preview recomputation: %s', async (mode) => {
-    const data = input(`-credit-race-${mode}`),
-      selected = await own(`EX-SHARE-credit-race-${mode}`);
-    const candidate = mode === 'status-selected' ? selected : await own(`EX-SHARE-credit-race-${mode}`);
-    const unrelated = await own(`UNRELATED-credit-race-${mode}`);
-    data.selectedMatches = [
-      {
-        sourceId: `invented-share-credit-race-${mode}`,
-        caseSourceId: `invented-customer-credit-race-${mode}`,
-        documentId: selected.id,
-        typeId: 'invoice',
-      },
-    ];
-    const note =
-      mode === 'insert-unselected'
-        ? null
-        : await prisma.documentInstance.create({
-            data: {
-              companyId,
-              typeId: 'credit-note',
-              status: 'sending',
+  it.each(['status-selected', 'status-unselected', 'membership-unselected', 'insert-unselected'] as const)(
+    'serializes credit input race after preview recomputation: %s',
+    async (mode) => {
+      const data = input(`-credit-race-${mode}`),
+        selected = await own(`EX-SHARE-credit-race-${mode}`);
+      const candidate = mode === 'status-selected' ? selected : await own(`EX-SHARE-credit-race-${mode}`);
+      const unrelated = await own(`UNRELATED-credit-race-${mode}`);
+      data.selectedMatches = [
+        {
+          sourceId: `invented-share-credit-race-${mode}`,
+          caseSourceId: `invented-customer-credit-race-${mode}`,
+          documentId: selected.id,
+          typeId: 'invoice',
+        },
+      ];
+      const note =
+        mode === 'insert-unselected'
+          ? null
+          : await prisma.documentInstance.create({
               data: {
-                invoice: mode === 'membership-unselected' ? unrelated.id : candidate.id,
+                companyId,
+                typeId: 'credit-note',
+                status: 'sending',
+                data: {
+                  invoice: mode === 'membership-unselected' ? unrelated.id : candidate.id,
+                  currency: 'NZD',
+                  correctedLines: ['invented-line'],
+                },
+              },
+            });
+      const p = await preview(data),
+        ctx = await context();
+      let pause!: () => void, resume!: () => void;
+      const paused = new Promise<void>((r) => {
+          pause = r;
+        }),
+        released = new Promise<void>((r) => {
+          resume = r;
+        });
+      let importerPid = 0;
+      const locked: string[] = [];
+      const db = new Proxy(prisma, {
+        get(target, key) {
+          if (key !== '$transaction') return Reflect.get(target, key);
+          return (run: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
+            target.$transaction(async (tx) => {
+              const [pid] = await tx.$queryRaw<Array<{ pid: number }>>`SELECT pg_backend_pid() AS pid`;
+              importerPid = pid.pid;
+              return run(
+                new Proxy(tx, {
+                  get(t, k) {
+                    if (k === 'reconciliationCase')
+                      return new Proxy(t.reconciliationCase, {
+                        get(delegate, op) {
+                          if (op !== 'create') return Reflect.get(delegate, op);
+                          return async (args: Parameters<typeof delegate.create>[0]) => {
+                            pause();
+                            await released;
+                            return delegate.create(args);
+                          };
+                        },
+                      });
+                    if (k === '$queryRaw')
+                      return (...args: unknown[]) => {
+                        const sql = (args[0] as TemplateStringsArray).join('?');
+                        if (sql.includes('DocumentInstance') && sql.includes('FOR UPDATE'))
+                          locked.push(args[2] as string);
+                        return Reflect.apply(t.$queryRaw, t, args);
+                      };
+                    return Reflect.get(t, k);
+                  },
+                }),
+              );
+            });
+        },
+      });
+      const confirmation = new ReconciliationService(new FinancialReadService(), db).confirmImport(
+        companyId,
+        projectId,
+        { ...data, previewHash: p.previewHash },
+        ctx,
+      );
+      const confirmed = confirmation.then(
+        (value) => ({ status: 'fulfilled' as const, value }),
+        (reason) => ({ status: 'rejected' as const, reason }),
+      );
+      await paused;
+      let writerDone = false;
+      const writing =
+        mode === 'insert-unselected'
+          ? prisma.documentInstance.create({
+              data: {
+                companyId,
+                typeId: 'credit-note',
+                status: 'sent',
+                data: { invoice: candidate.id, currency: 'NZD', correctedLines: ['invented-line'] },
+              },
+            })
+          : mode === 'membership-unselected'
+            ? upsertDocument(companyId, 'credit-note', note!.id, 'sending', {
+                invoice: candidate.id,
                 currency: 'NZD',
                 correctedLines: ['invented-line'],
-              },
-            },
-          });
-    const p = await preview(data),
-      ctx = await context();
-    let pause!: () => void, resume!: () => void;
-    const paused = new Promise<void>((r) => {
-        pause = r;
-      }),
-      released = new Promise<void>((r) => {
-        resume = r;
-      });
-    let importerPid = 0;
-    const locked: string[] = [];
-    const db = new Proxy(prisma, {
-      get(target, key) {
-        if (key !== '$transaction') return Reflect.get(target, key);
-        return (run: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-          target.$transaction(async (tx) => {
-            const [pid] = await tx.$queryRaw<Array<{ pid: number }>>`SELECT pg_backend_pid() AS pid`;
-            importerPid = pid.pid;
-            return run(
-              new Proxy(tx, {
-                get(t, k) {
-                  if (k === 'reconciliationCase')
-                    return new Proxy(t.reconciliationCase, {
-                      get(delegate, op) {
-                        if (op !== 'create') return Reflect.get(delegate, op);
-                        return async (args: Parameters<typeof delegate.create>[0]) => {
-                          pause();
-                          await released;
-                          return delegate.create(args);
-                        };
-                      },
-                    });
-                  if (k === '$queryRaw')
-                    return (...args: unknown[]) => {
-                      const sql = (args[0] as TemplateStringsArray).join('?');
-                      if (sql.includes('DocumentInstance') && sql.includes('FOR UPDATE'))
-                        locked.push(args[2] as string);
-                      return Reflect.apply(t.$queryRaw, t, args);
-                    };
-                  return Reflect.get(t, k);
-                },
-              }),
-            );
-          });
-      },
-    });
-    const confirmation = new ReconciliationService(new FinancialReadService(), db).confirmImport(
-      companyId,
-      projectId,
-      { ...data, previewHash: p.previewHash },
-      ctx,
-    );
-    const confirmed = confirmation.then(
-      (value) => ({ status: 'fulfilled' as const, value }),
-      (reason) => ({ status: 'rejected' as const, reason }),
-    );
-    await paused;
-    let writerDone = false;
-    const writing =
-      mode === 'insert-unselected'
-        ? prisma.documentInstance.create({
-            data: {
-              companyId,
-              typeId: 'credit-note',
-              status: 'sent',
-              data: { invoice: candidate.id, currency: 'NZD', correctedLines: ['invented-line'] },
-            },
-          })
-        : mode === 'membership-unselected'
-          ? upsertDocument(companyId, 'credit-note', note!.id, 'sending', {
-              invoice: candidate.id,
-              currency: 'NZD',
-              correctedLines: ['invented-line'],
-            })
-          : updateDocumentStatus(companyId, 'credit-note', note!.id, 'sent');
-    const written = Promise.resolve(writing).then(
-      (value) => {
-        writerDone = true;
-        return { status: 'fulfilled' as const, value };
-      },
-      (reason) => {
-        writerDone = true;
-        return { status: 'rejected' as const, reason };
-      },
-    );
-    let writerPid: number | null = null;
-    try {
-      const deadline = Date.now() + 2000;
-      while (!writerDone && Date.now() < deadline) {
-        const waiting = await prisma.$queryRaw<
-          Array<{ pid: number }>
-        >`SELECT pid FROM pg_stat_activity WHERE ${importerPid}=ANY(pg_blocking_pids(pid))`;
-        if (waiting.length) {
-          writerPid = waiting[0].pid;
-          break;
+              })
+            : updateDocumentStatus(companyId, 'credit-note', note!.id, 'sent');
+      const written = Promise.resolve(writing).then(
+        (value) => {
+          writerDone = true;
+          return { status: 'fulfilled' as const, value };
+        },
+        (reason) => {
+          writerDone = true;
+          return { status: 'rejected' as const, reason };
+        },
+      );
+      let writerPid: number | null = null;
+      try {
+        const deadline = Date.now() + 2000;
+        while (!writerDone && Date.now() < deadline) {
+          const waiting = await prisma.$queryRaw<
+            Array<{ pid: number }>
+          >`SELECT pid FROM pg_stat_activity WHERE ${importerPid}=ANY(pg_blocking_pids(pid))`;
+          if (waiting.length) {
+            writerPid = waiting[0].pid;
+            break;
+          }
+          await new Promise<void>((resolve) => setTimeout(resolve, 5));
         }
-        await new Promise<void>((resolve) => setTimeout(resolve, 5));
+      } finally {
+        resume();
       }
-    } finally {
-      resume();
-    }
-    const [importResult, writerResult] = await Promise.all([confirmed, written]);
-    expect(writerPid, 'canonical writer must block behind the checked import snapshot').not.toBeNull();
-    expect(writerPid).not.toBe(importerPid);
-    expect(importResult.status).toBe('fulfilled');
-    expect(writerResult.status).toBe('fulfilled');
-    expect(locked).toContain(selected.id);
-    expect(locked).toContain(candidate.id);
-    if (note) expect(locked).toContain(note.id);
-    if (candidate.id !== selected.id)
-      expect(await prisma.projectDocumentLink.count({ where: { companyId, documentId: candidate.id } })).toBe(
-        0,
-      );
-    expect(locked).toEqual([...locked].sort());
-    if (writerResult.status === 'fulfilled') {
-      const after = await prisma.documentInstance.findUniqueOrThrow({ where: { id: writerResult.value.id } });
-      expect(after.status).toBe(mode === 'membership-unselected' ? 'sending' : 'sent');
-      expect((after.data as { invoice: string }).invoice).toBe(candidate.id);
-      const latest = await prisma.$transaction((tx) =>
-        core.financialRead.readMany(companyId, [{ id: candidate.id, typeId: 'invoice' }], tx),
-      );
-      const beforeRead = p.proposedLinks[0].candidates.find(
-        (value) => value.documentId === candidate.id,
-      )!.financial;
-      expect(latest.get(`invoice:${candidate.id}`)!.sourceVersion).not.toBe(beforeRead.sourceVersion);
-      expect(latest.get(`invoice:${candidate.id}`)!.settlement!.creditedMinor).toBe(
-        mode === 'membership-unselected' ? 0 : 8700,
-      );
-    }
-  }, 10000);
+      const [importResult, writerResult] = await Promise.all([confirmed, written]);
+      expect(writerPid, 'canonical writer must block behind the checked import snapshot').not.toBeNull();
+      expect(writerPid).not.toBe(importerPid);
+      expect(importResult.status).toBe('fulfilled');
+      expect(writerResult.status).toBe('fulfilled');
+      expect(locked).toContain(selected.id);
+      expect(locked).toContain(candidate.id);
+      if (note) expect(locked).toContain(note.id);
+      if (candidate.id !== selected.id)
+        expect(
+          await prisma.projectDocumentLink.count({ where: { companyId, documentId: candidate.id } }),
+        ).toBe(0);
+      expect(locked).toEqual([...locked].sort());
+      if (writerResult.status === 'fulfilled') {
+        const after = await prisma.documentInstance.findUniqueOrThrow({
+          where: { id: writerResult.value.id },
+        });
+        expect(after.status).toBe(mode === 'membership-unselected' ? 'sending' : 'sent');
+        expect((after.data as { invoice: string }).invoice).toBe(candidate.id);
+        const latest = await prisma.$transaction((tx) =>
+          core.financialRead.readMany(companyId, [{ id: candidate.id, typeId: 'invoice' }], tx),
+        );
+        const beforeRead = p.proposedLinks[0].candidates.find(
+          (value) => value.documentId === candidate.id,
+        )!.financial;
+        expect(latest.get(`invoice:${candidate.id}`)!.sourceVersion).not.toBe(beforeRead.sourceVersion);
+        expect(latest.get(`invoice:${candidate.id}`)!.settlement!.creditedMinor).toBe(
+          mode === 'membership-unselected' ? 0 : 8700,
+        );
+      }
+    },
+    10000,
+  );
   it('rolls all rows back if the single root audit insert fails', async () => {
     const data = input('-rollback'),
       p = await preview(data),
