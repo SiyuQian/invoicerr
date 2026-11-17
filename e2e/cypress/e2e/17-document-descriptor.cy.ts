@@ -790,7 +790,7 @@ describe("A document is a descriptor, and the screen follows it", () => {
 				}).click({
 					force: true,
 				});
-				cy.url().should("include", `/documents/${types[0].id}`);
+				cy.url({ timeout: 15000 }).should("include", `/documents/${types[0].id}`);
 			});
 	});
 

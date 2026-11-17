@@ -239,7 +239,7 @@ describe("Quotes with options (issue #373)", () => {
 					"match",
 					/\/documents\/quote\/[^/]+$/,
 				);
-				cy.get('[data-cy="document-status-badge"]').should(
+				cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should(
 					"contain.text",
 					"Draft",
 				);
@@ -312,7 +312,7 @@ describe("Quotes with options (issue #373)", () => {
 							);
 
 							cy.visit(`${appOrigin}/documents/quote/${quoteId}`);
-							cy.get('[data-cy="document-status-badge"]').should(
+							cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should(
 								"contain.text",
 								"Sent",
 							);
@@ -415,7 +415,7 @@ describe("Quotes with options (issue #373)", () => {
 								"match",
 								/\/documents\/invoice\/[^/]+$/,
 							);
-							cy.get('[data-cy="document-status-badge"]').should(
+							cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should(
 								"contain.text",
 								"Draft",
 							);
@@ -628,7 +628,7 @@ describe("Quotes with options (issue #373)", () => {
 							// issuer-facing detail page below.
 							cy.login();
 							cy.visit(`${appOrigin}/documents/quote/${quoteId}`);
-							cy.get('[data-cy="document-status-badge"]').should(
+							cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should(
 								"contain.text",
 								"Signed",
 							);

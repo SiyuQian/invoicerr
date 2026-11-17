@@ -128,7 +128,7 @@ function expectUploadAnsweredPending(timing: { uploadMs: number }) {
 }
 
 function uploadAndOpenForm(fixturePath: string) {
-	cy.get('[data-cy="received-invoice-upload-button"]').click();
+	cy.get('[data-cy="received-invoice-upload-button"]', { timeout: 15000 }).click();
 	cy.get('[data-cy="received-invoice-upload-dialog"]', { timeout: 10000 }).should("be.visible");
 	cy.get('[data-cy="received-invoice-upload-file-input"]').selectFile(fixturePath, { force: true });
 	cy.get('[data-cy="received-invoice-upload-dialog"]').should("not.exist");
@@ -164,7 +164,7 @@ function confirmReceive(guard = 0) {
 // 05-clients.cy.ts's own "accepts valid EU VAT format" case.
 function createClientByScreen(name: string, opts?: { vat?: string }) {
 	cy.visit("/clients");
-	cy.contains("button", /add|new|créer|ajouter/i).click();
+	cy.contains("button", /add|new|créer|ajouter/i, { timeout: 15000 }).click();
 	cy.get('[data-cy="client-dialog"]', { timeout: 10000 }).should("be.visible");
 	cy.get('[name="name"]').clear().type(name);
 

@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { defineConfig } from "cypress";
+import { createReconciliationTasks } from "./cypress/support/reconciliation-tasks";
 import { Queue } from "bullmq";
 import { Client } from "pg";
 import jsQR from "jsqr";
@@ -691,6 +692,11 @@ export default defineConfig({
         return launchOptions;
       });
       on("task", {
+        ...createReconciliationTasks({
+          ...process.env,
+          DATABASE_URL: process.env.DATABASE_URL || "postgresql://invoicerr:invoicerr@localhost:5433/invoicerr_db?schema=public",
+          REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
+        }),
         /**
          * Print a step to the RUNNER's stdout, not the browser console.
          *

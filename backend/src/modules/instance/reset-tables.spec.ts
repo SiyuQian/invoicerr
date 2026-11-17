@@ -29,6 +29,20 @@ describe('INSTANCE_RESET_TABLES', () => {
     expect(INSTANCE_RESET_TABLES).not.toContain('_prisma_migrations');
   });
 
+  it('includes the reconciliation tables in operational resets', () => {
+    expect(INSTANCE_RESET_TABLES).toEqual(
+      expect.arrayContaining([
+        'ReconciliationProject',
+        'ReconciliationCase',
+        'CustomerInvoiceReference',
+        'ExternalReceipt',
+        'ExternalReceiptAllocation',
+        'ProjectDocumentLink',
+        'ReconciliationAuditEvent',
+      ]),
+    );
+  });
+
   it('has no duplicate entries', () => {
     expect(new Set(INSTANCE_RESET_TABLES).size).toBe(INSTANCE_RESET_TABLES.length);
   });

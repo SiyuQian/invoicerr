@@ -756,6 +756,12 @@ async function assertNothingDependsOn(
   companyId: string,
   id: string,
 ): Promise<void> {
+  if (await tx.projectDocumentLink.count({ where: { companyId, documentId: id } })) {
+    throw new ConflictException({
+      code: 'DOCUMENT_HAS_RECONCILIATION_LINKS',
+      message: 'A reconciliation project links to this document. Unlink it before deleting.',
+    });
+  }
   if ((await tx.documentSchedule.count({ where: { companyId, sourceDocumentId: id } })) > 0) {
     throw new ConflictException({
       message: 'A recurrence uses this document as its template. Delete the recurrence first.',

@@ -1,4 +1,19 @@
 export const queryKeys = {
+  projectReconciliation: {
+    documents: (companyId: string | null, typeId: string, search: string, page: number) =>
+      ["project-reconciliation", companyId, "document-candidates", typeId, search, page] as const,
+    all: (companyId: string | null) => ["project-reconciliation", companyId] as const,
+    projects: (companyId: string | null, filters: object) =>
+      ["project-reconciliation", companyId, "projects", filters] as const,
+    project: (companyId: string | null, id: string, filters: object = {}) =>
+      ["project-reconciliation", companyId, "project", id, filters] as const,
+    child: (companyId: string | null, id: string, resource: string, filters: object) =>
+      ["project-reconciliation", companyId, "project", id, resource, filters] as const,
+    clients: (companyId: string | null, search: string) =>
+      ["project-reconciliation", companyId, "clients", search] as const,
+    timeProjects: (companyId: string | null) =>
+      ["project-reconciliation", companyId, "time-projects"] as const,
+  },
   clients: {
     list: (page: number) => ["clients", "list", page] as const,
     listsAll: () => ["clients", "list"] as const,

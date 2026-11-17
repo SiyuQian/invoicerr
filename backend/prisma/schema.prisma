@@ -287,6 +287,13 @@ enum CompanyRole {
 
 // PDF Configuration
 model Company {
+  reconciliationProjects     ReconciliationProject[]
+  reconciliationCases        ReconciliationCase[]
+  customerInvoiceReferences  CustomerInvoiceReference[]
+  externalReceipts           ExternalReceipt[]
+  externalReceiptAllocations ExternalReceiptAllocation[]
+  projectDocumentLinks       ProjectDocumentLink[]
+  reconciliationAuditEvents  ReconciliationAuditEvent[]
   id          String   @id @default(cuid())
   name        String
   description String?
@@ -854,6 +861,8 @@ model UserCompany {
 
 // Client model
 model Client {
+  reconciliationEndCustomerProjects ReconciliationProject[] @relation("ReconciliationEndCustomer")
+  reconciliationPartnerProjects     ReconciliationProject[] @relation("ReconciliationPartner")
   id               String            @id @default(cuid())
   company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId        String
@@ -948,6 +957,7 @@ model Client {
   // row is explicitly added.
   paymentMethodRestrictions ClientPaymentMethodRestriction[]
 
+  @@unique([companyId, id])
   @@index([companyId])
 }
 
@@ -1048,6 +1058,7 @@ model Article {
 // (descriptors/): a project is never issued, sent, numbered or archived, so it has no business going
 // through DocumentsService/ActionRegistry at all.
 model Project {
+  reconciliationProjects ReconciliationProject[]
   id              String      @id @default(cuid())
   company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId       String
@@ -1065,6 +1076,7 @@ model Project {
   updatedAt       DateTime    @updatedAt
   timeEntries     TimeEntry[]
 
+  @@unique([companyId, id])
   @@index([companyId])
   @@index([clientId])
 }
@@ -1598,6 +1610,7 @@ model Log {
 // keyed by the descriptor's field.key, exactly as the form submitted them.
 
 model DocumentInstance {
+  reconciliationLinks ProjectDocumentLink[]
   id        String   @id @default(cuid())
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId String
@@ -1828,6 +1841,7 @@ model DocumentInstance {
   // list, not a nullable single row).
   paymentCheckoutSessions PaymentCheckoutSession[]
 
+  @@unique([companyId, id])
   @@index([companyId, typeId])
   // `persistence.ts#listDocumentsPage` (`GET /documents`'s own paginated read) — one type's own rows,
   // for one company, ordered most-recently-updated-first, is the DEFAULT view before any filter is
@@ -3709,3 +3723,224 @@ model BackupRun {
 }
 
 // ======= END OF INSTANCE FILE BACKUP ======= //
+
+// Reconciliation relationships only: live document amounts/payments remain in the document core.
+enum ReconciliationCollectionMode {
+  COMPANY
+  PARTNER
+}
+
+enum ReconciliationProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ReconciliationCaseStatus {
+  OPEN
+  CLOSED_VERIFIED
+  CLOSED_WITH_EXCEPTIONS
+}
+
+enum ReconciliationDocumentRole {
+  CUSTOMER_INVOICE
+  SETTLEMENT_INCOME
+  PARTNER_BILL
+  PROJECT_COST
+}
+
+enum ReconciliationEvidenceClass {
+  PARTNER_REPORTED
+  EVIDENCE_CHECKED
+}
+
+model ReconciliationProject {
+  id                  String                       @id @default(cuid())
+  companyId           String
+  company             Company                      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  name                String
+  currency            Currency
+  endCustomerName     String
+  endCustomerClientId String?
+  endCustomer         Client?                      @relation("ReconciliationEndCustomer", fields: [companyId, endCustomerClientId], references: [companyId, id], onDelete: Restrict, onUpdate: Restrict)
+  partnerClientId     String?
+  partner             Client?                      @relation("ReconciliationPartner", fields: [companyId, partnerClientId], references: [companyId, id], onDelete: Restrict, onUpdate: Restrict)
+  collectionMode      ReconciliationCollectionMode
+  description         String?
+  status              ReconciliationProjectStatus  @default(ACTIVE)
+  timeProjectId       String?
+  timeProject         Project?                     @relation(fields: [companyId, timeProjectId], references: [companyId, id], onDelete: Restrict, onUpdate: Restrict)
+  revision            Int                          @default(1)
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+  cases               ReconciliationCase[]
+  invoiceReferences   CustomerInvoiceReference[]   @relation("ReconciliationReferenceMode")
+  invoiceCurrencies   CustomerInvoiceReference[]   @relation("ReconciliationReferenceCurrency")
+  receipts            ExternalReceipt[]
+  documentLinks       ProjectDocumentLink[]
+  auditEvents         ReconciliationAuditEvent[]
+
+  @@unique([companyId, id])
+  @@unique([companyId, id, currency])
+  @@unique([companyId, id, collectionMode])
+  @@unique([companyId, id, currency, collectionMode])
+  @@unique([companyId, timeProjectId])
+  @@index([companyId, status])
+}
+
+model ReconciliationCase {
+  id                 String                     @id @default(cuid())
+  companyId          String
+  company            Company                    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  projectId          String
+  project            ReconciliationProject      @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict, onUpdate: Restrict)
+  title              String
+  period             String?
+  status             ReconciliationCaseStatus   @default(OPEN)
+  agreedGrossMinor   Int?
+  agreedNetMinor     Int?
+  agreedTaxMinor     Int?
+  agreementReference String?
+  agreementReason    String?
+  version            Int                        @default(1)
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  invoiceReferences  CustomerInvoiceReference[]
+  documentLinks      ProjectDocumentLink[]
+
+  reviewedSourceFingerprint String?
+  reviewedBy                String?
+  reviewedAt                DateTime?
+  source                    String?
+  externalId                String?
+  sourceSnapshot            Json?
+  snapshotHash              String?
+
+  @@unique([companyId, source, externalId])
+  @@unique([companyId, projectId, id])
+}
+
+model CustomerInvoiceReference {
+  id                    String                       @id @default(cuid())
+  companyId             String
+  company               Company                      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  projectId             String
+  collectionMode        ReconciliationCollectionMode
+  project               ReconciliationProject        @relation("ReconciliationReferenceMode", fields: [companyId, projectId, collectionMode], references: [companyId, id, collectionMode], onDelete: Restrict, onUpdate: Restrict)
+  caseId                String
+  case                  ReconciliationCase           @relation(fields: [companyId, projectId, caseId], references: [companyId, projectId, id], onDelete: Restrict, onUpdate: Restrict)
+  documentLinkId        String?
+  documentLinkRole      ReconciliationDocumentRole?
+  documentLink          ProjectDocumentLink?         @relation(fields: [companyId, projectId, caseId, documentLinkId, documentLinkRole], references: [companyId, projectId, caseId, id, role], onDelete: Restrict, onUpdate: Restrict)
+  issuer                String?
+  recipient             String?
+  invoiceNumber         String?
+  issueDate             DateTime?
+  dueDate               DateTime?
+  currency              Currency?
+  currencyProject       ReconciliationProject?       @relation("ReconciliationReferenceCurrency", fields: [companyId, projectId, currency], references: [companyId, id, currency], onDelete: Restrict, onUpdate: Restrict)
+  originalGrossMinor    Int?
+  creditAdjustmentMinor Int                          @default(0)
+  netMinor              Int?
+  taxMinor              Int?
+  reportedStatus        String?
+  sourceReference       String?
+  source                String?
+  externalId            String?
+  sourceSnapshot        Json?
+  snapshotHash          String?
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+  allocations           ExternalReceiptAllocation[]
+
+  @@unique([companyId, projectId, id, collectionMode])
+  @@unique([companyId, documentLinkId])
+  @@unique([companyId, source, externalId])
+  @@index([companyId, issuer, invoiceNumber, issueDate])
+}
+
+model ExternalReceipt {
+  id                String                       @id @default(cuid())
+  companyId         String
+  company           Company                      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  projectId         String
+  collectionMode    ReconciliationCollectionMode @default(PARTNER)
+  currency          Currency
+  project           ReconciliationProject        @relation(fields: [companyId, projectId, currency, collectionMode], references: [companyId, id, currency, collectionMode], onDelete: Restrict, onUpdate: Restrict)
+  collector         String
+  grossMinor        Int
+  receivedAt        DateTime?
+  evidenceClass     ReconciliationEvidenceClass  @default(PARTNER_REPORTED)
+  sourceReference   String
+  evidenceReference String?
+  evidenceUrl       String?
+  enteredBy         String
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  humanAttestation  String?
+  reason            String?
+  version           Int                          @default(1)
+  voidedAt          DateTime?
+  voidedBy          String?
+  voidReason        String?
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+  allocations       ExternalReceiptAllocation[]
+
+  @@unique([companyId, projectId, id])
+}
+
+model ExternalReceiptAllocation {
+  id                 String                       @id @default(cuid())
+  companyId          String
+  company            Company                      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  projectId          String
+  receiptId          String
+  receipt            ExternalReceipt              @relation(fields: [companyId, projectId, receiptId], references: [companyId, projectId, id], onDelete: Restrict, onUpdate: Restrict)
+  invoiceReferenceId String
+  collectionMode     ReconciliationCollectionMode @default(PARTNER)
+  invoiceReference   CustomerInvoiceReference     @relation(fields: [companyId, projectId, invoiceReferenceId, collectionMode], references: [companyId, projectId, id, collectionMode], onDelete: Restrict, onUpdate: Restrict)
+  amountMinor        Int
+  createdAt          DateTime                     @default(now())
+
+  @@unique([companyId, receiptId, invoiceReferenceId])
+  @@index([companyId, projectId, invoiceReferenceId])
+}
+
+model ProjectDocumentLink {
+  id                String                     @id @default(cuid())
+  companyId         String
+  company           Company                    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  projectId         String
+  project           ReconciliationProject      @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict, onUpdate: Restrict)
+  caseId            String?
+  case              ReconciliationCase?        @relation(fields: [companyId, projectId, caseId], references: [companyId, projectId, id], onDelete: Restrict, onUpdate: Restrict)
+  documentId        String
+  document          DocumentInstance           @relation(fields: [companyId, documentId], references: [companyId, id], onDelete: Restrict, onUpdate: Restrict)
+  role              ReconciliationDocumentRole
+  createdAt         DateTime                   @default(now())
+  invoiceReferences CustomerInvoiceReference[]
+
+  @@unique([companyId, documentId])
+  @@unique([companyId, projectId, caseId, id, role], map: "ProjectDocumentLink_reference_key")
+  @@index([companyId, projectId])
+}
+
+model ReconciliationAuditEvent {
+  id             String                @id @default(cuid())
+  companyId      String
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  projectId      String
+  project        ReconciliationProject @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict, onUpdate: Restrict)
+  // Historical namespaced identities deliberately carry no live user/document FK.
+  actor          String
+  occurredAt     DateTime              @default(now())
+  operation      String
+  requestKey     String
+  affectedRecord String
+  before         Json?
+  after          Json?
+  reason         String?
+
+  @@unique([companyId, actor, requestKey])
+  @@index([companyId, projectId, occurredAt])
+}

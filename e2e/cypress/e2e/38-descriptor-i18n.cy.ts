@@ -77,7 +77,7 @@ describe("i18n descriptors (item 25) -- key derived in EN, falling back to the r
 
 		// The sidebar names the type — documents.descriptors.invoice.label now exists on the EN side,
 		// with exactly the same value as the descriptor's raw label.
-		cy.get('[data-cy="sidebar-document-type-link-invoice"]').should("contain.text", "Invoice");
+		cy.get('[data-cy="sidebar-document-type-link-invoice"]', { timeout: 15000 }).should("contain.text", "Invoice");
 
 		cy.get('[data-cy="document-create-button"]', { timeout: 15000 }).click();
 		cy.get('[data-cy="document-form"]', { timeout: 15000 }).should("exist");

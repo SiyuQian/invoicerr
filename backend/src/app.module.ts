@@ -43,6 +43,7 @@ import { ReceivedInvoicesModule } from './modules/documents/received-invoices/re
 import { PrismaModule } from './prisma/prisma.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SireneModule } from './modules/sirene/sirene.module';
+import { ProjectReconciliationModule } from './modules/project-reconciliation/module';
 import { TimeTrackingModule } from './modules/time-tracking/time-tracking.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { WebhooksQueueWorkerModule } from './modules/webhooks/queue/webhooks-queue-worker.module';
@@ -191,6 +192,7 @@ const workerInline = process.env.WORKER_INLINE !== 'false';
     // Time tracking & project invoicing — self-contained, no
     // dependency on DocumentsCoreModule (see time-tracking.module.ts's own header).
     TimeTrackingModule,
+    ProjectReconciliationModule,
     // Bank reconciliation via statement import — its own module,
     // importing DocumentsCoreModule directly so its one write path (reconciling a line) can call the
     // real "record-payment" action rather than a second one (see bank-reconciliation.module.ts's own

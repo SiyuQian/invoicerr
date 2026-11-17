@@ -2,6 +2,8 @@ import { useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import { useSse } from "./use-fetch"
+import { useCompanies } from "./queries/use-companies"
+import { queryKeys } from "@/lib/query-keys"
 
 /**
  * Mirrors the backend's own `DocumentEventMessage` (queue/document-events.ts) — deliberately THIN,
@@ -50,6 +52,7 @@ export interface DocumentEventMessage {
  */
 export function useDocumentEventsSse(): void {
   const queryClient = useQueryClient()
+  const { activeCompanyId } = useCompanies()
   const { data } = useSse<DocumentEventMessage>("/api/documents/events")
 
   useEffect(() => {
@@ -60,6 +63,8 @@ export function useDocumentEventsSse(): void {
     // absent or a genuine DocumentEventMessage, never a heartbeat mistaken for one.
     if (!data) return
     queryClient.invalidateQueries({ queryKey: ["documents", data.typeId] })
+    if (activeCompanyId && ["invoice", "credit-note", "expense", "received-invoice"].includes(data.typeId))
+      queryClient.invalidateQueries({ queryKey: queryKeys.projectReconciliation.all(activeCompanyId) })
     // A declarative-reporting outcome (`report:blocked`/`report:failed`, or a real provider verdict —
     // reporting/reporting-runner.ts) journals onto the SAME `DocumentAuthorityEvent` table a
     // conformity poll does, and is published under this SAME "authority-event" kind — see that
@@ -69,5 +74,5 @@ export function useDocumentEventsSse(): void {
     if (data.kind === "authority-event") {
       queryClient.invalidateQueries({ queryKey: ["declarations"] })
     }
-  }, [data, queryClient])
+  }, [data, queryClient, activeCompanyId])
 }

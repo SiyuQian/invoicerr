@@ -47,6 +47,7 @@ function apiErrorCode(error: unknown): string | undefined {
 /** The server's coded refusals of a delete, re-worded in the reader's language with the linked
  *  document's own type label instead of its raw id. */
 const DELETE_REFUSAL_KEYS: Record<string, string> = {
+  DOCUMENT_HAS_RECONCILIATION_LINKS: "documents.form.deleteRefused.reconciliationLinks",
   DOCUMENT_HAS_DEPENDENTS: "documents.form.deleteRefused.hasDependents",
   DOCUMENT_IS_RECURRENCE_TEMPLATE: "documents.form.deleteRefused.recurrenceTemplate",
   DOCUMENT_NUMBERED: "documents.form.deleteRefused.numbered",

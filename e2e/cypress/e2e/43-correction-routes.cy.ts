@@ -564,7 +564,7 @@ describe("Correct — the screen, browser level", () => {
 		setInvoiceTransport("email");
 		const preMandateDates = { issueDate: "2026-08-18", dueDate: "2026-09-18" };
 
-		openCorrectionDialogOnNewInvoice("Client Traduction SARL", preMandateDates).then((invoiceId) => {
+		openCorrectionDialogOnNewInvoice("Client Traduction SARL", preMandateDates, "validate").then((invoiceId) => {
 
 					// The header: the curated, translated explanation, never the backend's own raw
 					// developer note (`correction-routes.ts`'s own `LIMITATION_TEXT`, still sent by the

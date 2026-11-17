@@ -48,7 +48,11 @@ for spec in "${list[@]}"; do
   attempt=1
   while :; do
     log="$(mktemp)"
-    timeout --kill-after=30 "${limit_min}m" $cypress_bin run "$@" --spec "$spec" 2>&1 | tee "$log"
+    # Scope Cypress's cleanup to this spec's diagnostics; keep downloads clearing between specs.
+    # shortcut: basenames are unique today; use relative paths if duplicate spec names are added.
+    CYPRESS_screenshotsFolder="cypress/screenshots/${spec##*/}" \
+      CYPRESS_videosFolder="cypress/videos/${spec##*/}" \
+      timeout --kill-after=30 "${limit_min}m" $cypress_bin run "$@" --spec "$spec" 2>&1 | tee "$log"
     status=${PIPESTATUS[0]}
     if [[ "$attempt" -eq 1 && "$status" -ne 0 && "$status" -ne 124 && "$status" -ne 137 ]] \
       && browser_never_connected "$log" && no_test_ran "$log"; then

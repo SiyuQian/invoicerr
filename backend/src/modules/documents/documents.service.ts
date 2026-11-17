@@ -18,7 +18,11 @@ import { isArchivedPdfServable } from './rendering/archived-pdf-policy';
 import { renderDocumentInstance } from './rendering/render-instance-pdf';
 import { computeDocumentTotals, DocumentTotals } from './totals/compute-totals';
 import { ServerMessage } from './messages/server-message';
-import { DocumentTotalsView, resolveDocumentTotalsView, SettlementTotals } from './totals/document-totals-view';
+import {
+  DocumentTotalsView,
+  resolveDocumentTotalsView,
+  SettlementTotals,
+} from './totals/document-totals-view';
 import { computeQuoteOptionTotals, isQuoteWithOptions, rejectStrayOptionTag } from './options/quote-options';
 import {
   APPROVAL_REQUIRED_MESSAGE,

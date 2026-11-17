@@ -100,7 +100,7 @@ describe("Payment methods — configured through the screen, rendered differentl
 
 	it("the screen offers all seven built-in methods, every one disabled on a freshly seeded company", () => {
 		cy.visit("/dashboard");
-		cy.get('[data-cy="sidebar-payment-methods-link"]').click();
+		cy.get('[data-cy="sidebar-payment-methods-link"]', { timeout: 15000 }).click();
 		cy.location("pathname").should("eq", "/payment-methods");
 
 		cy.get('[data-cy="payment-methods-list"]', { timeout: 15000 }).should("be.visible");
@@ -128,7 +128,7 @@ describe("Payment methods — configured through the screen, rendered differentl
 	it('enabling "Cash" (zero fields) shows only its own label — the empty case, on screen', () => {
 		cy.visit("/payment-methods");
 
-		cy.get('[data-cy="payment-method-toggle-cash"]').click();
+		cy.get('[data-cy="payment-method-toggle-cash"]', { timeout: 15000 }).click();
 		cy.get('[data-cy="payment-method-status-cash"]').should("contain.text", "Enabled");
 		// The empty case, proven on screen: no preview block at all for a method with zero fields.
 		cy.get('[data-cy="payment-method-preview-cash"]').should("not.exist");
@@ -147,7 +147,7 @@ describe("Payment methods — configured through the screen, rendered differentl
 	it('configuring PayPal\'s e-mail through the dialog, then enabling it, renders a VISIBLY DIFFERENT card than Cash — real fields, a real dialog', () => {
 		cy.visit("/payment-methods");
 
-		cy.get('[data-cy="payment-method-configure-paypal"]').click();
+		cy.get('[data-cy="payment-method-configure-paypal"]', { timeout: 15000 }).click();
 		cy.get('[data-cy="payment-method-config-dialog"]', { timeout: 10000 }).should("be.visible");
 		cy.get('[data-cy="payment-method-config-dialog"]')
 			.find('[data-cy="document-field-email-input"]')
@@ -201,7 +201,7 @@ describe("Payment methods — configured through the screen, rendered differentl
 					// Now enable PayPal — through the SCREEN, a real click on a real dialog, exactly like
 					// the earlier tests in this spec.
 					cy.visit("/payment-methods");
-					cy.get('[data-cy="payment-method-configure-paypal"]').click();
+					cy.get('[data-cy="payment-method-configure-paypal"]', { timeout: 15000 }).click();
 					cy.get('[data-cy="payment-method-config-dialog"]', { timeout: 10000 }).should("be.visible");
 					cy.get('[data-cy="payment-method-config-dialog"]')
 						.find('[data-cy="document-field-email-input"]')
@@ -243,7 +243,7 @@ describe("Payment methods — configured through the screen, rendered differentl
 	it('toggling "Cheque" (still unconfigured at this point in the suite) opens its config dialog instead of a raw error — one save both fills it in and enables it', () => {
 		cy.visit("/payment-methods");
 
-		cy.get('[data-cy="payment-method-status-cheque"]').should("contain.text", "Disabled");
+		cy.get('[data-cy="payment-method-status-cheque"]', { timeout: 15000 }).should("contain.text", "Disabled");
 		cy.get('[data-cy="payment-method-toggle-cheque"]').click();
 
 		// The dialog opens INSTEAD of the switch round-tripping into a 400 — no error toast, and the
@@ -280,7 +280,7 @@ describe("Payment methods — configured through the screen, rendered differentl
 			bankName: "Example Bank",
 		};
 		cy.visit("/payment-methods");
-		cy.get('[data-cy="payment-method-toggle-bank_transfer_nz"]').click();
+		cy.get('[data-cy="payment-method-toggle-bank_transfer_nz"]', { timeout: 15000 }).click();
 		cy.get('[data-cy="document-field-accountName-input"]').type(
 			config.accountName,
 			{ parseSpecialCharSequences: false },

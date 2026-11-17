@@ -23,6 +23,7 @@ describe("Client CSV import", () => {
 		cy.resetAndSeed();
 		cy.login();
 		cy.visit("/clients");
+		cy.get('[data-cy="clients-import-button"]', { timeout: 15000 }).should("be.visible");
 	});
 
 	it("downloads the template with the expected header line", () => {

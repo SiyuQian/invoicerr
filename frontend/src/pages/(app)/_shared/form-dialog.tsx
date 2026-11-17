@@ -36,6 +36,7 @@ function useHasContentBelow(el: HTMLDivElement | null) {
 interface FormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onCloseAutoFocus?: React.ComponentProps<typeof DialogContent>["onCloseAutoFocus"]
   title: React.ReactNode
   description?: React.ReactNode
   /** The footer's controls — ONE `default` button (the save), the rest `outline`. Rendered inside
@@ -62,6 +63,7 @@ interface FormDialogProps {
 export function FormDialog({
   open,
   onOpenChange,
+  onCloseAutoFocus,
   title,
   description,
   footer,
@@ -99,6 +101,7 @@ export function FormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        onCloseAutoFocus={onCloseAutoFocus}
         className={cn("flex max-h-[90vh] flex-col gap-0 p-0", className ?? "sm:max-w-2xl")}
         dataCy={dataCy}
       >

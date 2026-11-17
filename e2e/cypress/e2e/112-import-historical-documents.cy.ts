@@ -214,7 +214,7 @@ describe("Issue #340 - import historical documents from a previous tool", () => 
 			// dynamic row table, not simple inputs - the established house style is "UI only for the
 			// assertions/screenshots being proven").
 			cy.visit(`${appOrigin}/documents/invoice`);
-			cy.get('[data-cy="import-document-button-invoice"]').click();
+			cy.get('[data-cy="import-document-button-invoice"]', { timeout: 15000 }).click();
 			cy.get('[data-cy="import-document-upload-dialog"]', { timeout: 10000 }).should("be.visible");
 			cy.screenshot("340-before-import-form", { capture: "viewport" });
 
@@ -280,7 +280,7 @@ describe("Issue #340 - import historical documents from a previous tool", () => 
 	it("imports invoices in bulk from a CSV file, with a real preview", () => {
 		createClient("Bulk Migration Co", "bulk-migration@example.com").then((clientId) => {
 			cy.visit(`${appOrigin}/documents/invoice`);
-			cy.get('[data-cy="import-document-csv-button-invoice"]').click();
+			cy.get('[data-cy="import-document-csv-button-invoice"]', { timeout: 15000 }).click();
 			cy.get('[data-cy="import-document-csv-dialog"]', { timeout: 10000 }).should("be.visible");
 
 			cy.get('[data-cy="import-document-csv-files-input"]').selectFile(ORIGINAL_PDF_SELECT_PATH, {

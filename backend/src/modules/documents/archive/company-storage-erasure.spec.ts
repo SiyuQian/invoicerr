@@ -55,6 +55,14 @@ let journalReadFails: string | null;
 let nextId: number;
 
 const prismaMock = {
+  $queryRaw: async () => [],
+  reconciliationAuditEvent: { deleteMany: async () => ({ count: 0 }) },
+  externalReceiptAllocation: { deleteMany: async () => ({ count: 0 }) },
+  customerInvoiceReference: { deleteMany: async () => ({ count: 0 }) },
+  externalReceipt: { deleteMany: async () => ({ count: 0 }) },
+  projectDocumentLink: { deleteMany: async () => ({ count: 0 }) },
+  reconciliationCase: { deleteMany: async () => ({ count: 0 }) },
+  reconciliationProject: { deleteMany: async () => ({ count: 0 }) },
   companySubscription: { findUnique: async () => subscriptionRow },
   userCompany: { findMany: async () => [] },
   webhook: { deleteMany: async () => ({ count: 0 }) },

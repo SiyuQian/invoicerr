@@ -145,7 +145,7 @@ describe("Online payment — Mollie", () => {
 
 	function connectMollie() {
 		cy.visit("/settings/payments");
-		cy.get('[data-cy="payment-provider-mollie-apikey-input"]').clear().type(MOLLIE_API_KEY);
+		cy.get('[data-cy="payment-provider-mollie-apikey-input"]', { timeout: 15000 }).clear().type(MOLLIE_API_KEY);
 		cy.get('[data-cy="payment-provider-mollie-connect-button"]').click();
 		cy.get('[data-cy="payment-provider-mollie-status"]', { timeout: 15000 }).should("contain", "Connected");
 
@@ -248,7 +248,7 @@ describe("Online payment — PayPal", () => {
 
 	function connectPayPal() {
 		cy.visit("/settings/payments");
-		cy.get('[data-cy="payment-provider-paypal-environment-select"]').click();
+		cy.get('[data-cy="payment-provider-paypal-environment-select"]', { timeout: 15000 }).click();
 		cy.get('[data-cy="payment-provider-paypal-environment-option-test"]').click();
 		cy.get('[data-cy="payment-provider-paypal-clientid-input"]').clear().type(PAYPAL_CLIENT_ID);
 		cy.get('[data-cy="payment-provider-paypal-clientsecret-input"]').clear().type(PAYPAL_CLIENT_SECRET);
