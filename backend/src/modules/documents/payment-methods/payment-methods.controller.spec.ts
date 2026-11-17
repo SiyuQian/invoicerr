@@ -156,25 +156,25 @@ describe('PaymentMethodsController — authorization', () => {
 
   // Mirror image: the right scope, the wrong role. An API key is minted by a person and never
   // outranks them, so a MEMBER's key must be refused here exactly like the MEMBER themselves.
-  it.each([
-    'bank_transfer',
-    'bank_transfer_nz',
-  ])('refuses a company:write key held by a MEMBER on the config write', async (methodId) => {
-    const rawKey = await createApiKey(memberUserId, ['company:write']);
-    await expect(
-      runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey, methodId)),
-    ).rejects.toThrow(ForbiddenException);
-  });
+  it.each(['bank_transfer', 'bank_transfer_nz'])(
+    'refuses a company:write key held by a MEMBER on the config write',
+    async (methodId) => {
+      const rawKey = await createApiKey(memberUserId, ['company:write']);
+      await expect(
+        runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey, methodId)),
+      ).rejects.toThrow(ForbiddenException);
+    },
+  );
 
-  it.each([
-    'bank_transfer',
-    'bank_transfer_nz',
-  ])('lets a company:write key held by an ADMIN through on the config write', async (methodId) => {
-    const rawKey = await createApiKey(adminUserId, ['company:write']);
-    await expect(
-      runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey, methodId)),
-    ).resolves.toBe(true);
-  });
+  it.each(['bank_transfer', 'bank_transfer_nz'])(
+    'lets a company:write key held by an ADMIN through on the config write',
+    async (methodId) => {
+      const rawKey = await createApiKey(adminUserId, ['company:write']);
+      await expect(
+        runGuards(PaymentMethodsController.prototype.update, requestWithKey(rawKey, methodId)),
+      ).resolves.toBe(true);
+    },
+  );
 
   // The human half of the same route. A session carries no scopes at all (`request.scopes` is null,
   // which `hasAnyScope` treats as satisfied), so `@Roles` is the ONLY thing standing between a plain

@@ -113,24 +113,23 @@ describe('New Zealand ordinary invoicing', () => {
     ).toEqual([]);
   });
 
-  it.each([
-    'NZ',
-    'AU',
-    'US',
-  ])('keeps the chosen GST rate for NZ → %s and calculates discounted totals', (buyer) => {
-    const result = resolveInvoiceCrossBorderTax({
-      seller: { countryCode: 'NZ' },
-      buyer: { countryCode: buyer },
-      data: data('nz-standard'),
-    });
-    expect(result.warnings).toEqual([]);
-    expect(computeDocumentTotals(descriptor, result.data)).toMatchObject({
-      netMinor: 18000,
-      vatMinor: 2700,
-      grossMinor: 20700,
-    });
-    expect(JSON.stringify(result.data)).not.toMatch(/VATEX-EU|Directive|reverse charge/i);
-  });
+  it.each(['NZ', 'AU', 'US'])(
+    'keeps the chosen GST rate for NZ → %s and calculates discounted totals',
+    (buyer) => {
+      const result = resolveInvoiceCrossBorderTax({
+        seller: { countryCode: 'NZ' },
+        buyer: { countryCode: buyer },
+        data: data('nz-standard'),
+      });
+      expect(result.warnings).toEqual([]);
+      expect(computeDocumentTotals(descriptor, result.data)).toMatchObject({
+        netMinor: 18000,
+        vatMinor: 2700,
+        grossMinor: 20700,
+      });
+      expect(JSON.stringify(result.data)).not.toMatch(/VATEX-EU|Directive|reverse charge/i);
+    },
+  );
 
   it.each(['nz-zero', 'nz-exempt'])('keeps %s stable when an overseas invoice is resolved twice', (rate) => {
     const input = { seller: { countryCode: 'NZ' }, buyer: { countryCode: 'AU' }, data: data(rate) };
