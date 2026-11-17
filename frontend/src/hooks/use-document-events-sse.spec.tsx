@@ -22,6 +22,8 @@ vi.mock("./use-fetch", async (importOriginal) => {
   return { ...actual, useSse: vi.fn() }
 })
 
+const session = vi.hoisted(() => ({ activeCompanyId: null as string | null }))
+vi.mock("./queries/use-companies", () => ({ useCompanies: () => session }))
 const mockedUseSse = vi.mocked(useFetchModule.useSse)
 
 function buildWrapper(queryClient: QueryClient) {
@@ -37,6 +39,7 @@ function sseResult(data: useFetchModule.useSseResult["data"]): useFetchModule.us
 describe("useDocumentEventsSse", () => {
   afterEach(() => {
     vi.clearAllMocks()
+    session.activeCompanyId = null
   })
 
   it("never invalidates anything before a message has arrived", () => {
@@ -89,4 +92,21 @@ describe("useDocumentEventsSse", () => {
     expect(invalidateSpy).toHaveBeenCalledTimes(2)
     expect(invalidateSpy).toHaveBeenNthCalledWith(2, { queryKey: ["documents", "invoice"] })
   })
+})
+
+it("invalidates only the active company reconciliation prefix for a canonical document nudge", () => {
+  session.activeCompanyId = "company-a"
+  const queryClient = new QueryClient()
+  queryClient.setQueryData(["project-reconciliation", "company-a", "project", "one"], "a")
+  queryClient.setQueryData(["project-reconciliation", "company-b", "project", "one"], "b")
+  queryClient.setQueryData(["documents", "invoice", "one"], "document")
+  mockedUseSse.mockReturnValue(sseResult({ documentId: "one", typeId: "invoice", kind: "authority-event" }))
+  renderHook(() => useDocumentEventsSse(), { wrapper: buildWrapper(queryClient) })
+  expect(
+    queryClient.getQueryState(["project-reconciliation", "company-a", "project", "one"])?.isInvalidated,
+  ).toBe(true)
+  expect(
+    queryClient.getQueryState(["project-reconciliation", "company-b", "project", "one"])?.isInvalidated,
+  ).toBe(false)
+  expect(queryClient.getQueryState(["documents", "invoice", "one"])?.isInvalidated).toBe(true)
 })

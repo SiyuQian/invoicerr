@@ -6,6 +6,7 @@ import {
   Clock,
   CreditCard,
   FileStack,
+  FolderKanban,
   Gavel,
   Landmark,
   LayoutDashboard,
@@ -146,6 +147,12 @@ export function Sidebar() {
       icon: <Clock className="w-4 h-4" />,
       url: "/time-tracking",
       dataCy: "sidebar-time-tracking-link",
+    },
+    {
+      title: t("sidebar.navigation.projectReconciliation"),
+      icon: <FolderKanban className="w-4 h-4" />,
+      url: "/project-reconciliation",
+      dataCy: "sidebar-project-reconciliation-link",
     },
     {
       title: t("sidebar.navigation.bankReconciliation"),

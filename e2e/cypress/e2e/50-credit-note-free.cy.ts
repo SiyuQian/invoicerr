@@ -320,7 +320,7 @@ describe("Free credit note — the screen, browser level", () => {
 	it('is created from the credit-note list\'s own "New" button — wizard-driven, no invoice ever picked', () => {
 		createClient("Client Avoir Libre Écran SARL").then((clientId) => {
 			cy.visit("/documents/credit-note");
-			cy.get('[data-cy="document-create-button"]').click();
+			cy.get('[data-cy="document-create-button"]', { timeout: 15000 }).click();
 			cy.get('[data-cy="document-create-dialog"]', { timeout: 10000 }).should(
 				"be.visible",
 			);

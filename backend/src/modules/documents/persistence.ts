@@ -12,7 +12,7 @@ import { DocumentInstanceResult } from './actions/action-registry';
 
 /** 404s (rather than returning null) when `id` doesn't exist or belongs to another company/type —
  *  the two cases are indistinguishable from the outside, which is the point. */
-type DocumentDb = Prisma.TransactionClient | typeof prisma;
+export type DocumentDb = Prisma.TransactionClient | typeof prisma;
 
 export async function findOwnedDocument(
   companyId: string,
@@ -413,6 +413,7 @@ export interface ListAllDocumentsOptions {
 export async function listAllDocuments(
   companyId: string,
   options: ListAllDocumentsOptions = {},
+  db: DocumentDb = prisma,
 ): Promise<DocumentInstanceResult[]> {
   const where: Prisma.DocumentInstanceWhereInput = {
     companyId,
@@ -427,7 +428,7 @@ export async function listAllDocuments(
       : {}),
   };
 
-  const rows = await scanEveryMatchingDocument(where, companyId, options.typeId);
+  const rows = await scanEveryMatchingDocument(where, companyId, options.typeId, db);
 
   const field = options.orderBy?.field ?? 'updatedAt';
   const direction = options.orderBy?.direction ?? 'desc';
@@ -448,11 +449,12 @@ async function scanEveryMatchingDocument(
   where: Prisma.DocumentInstanceWhereInput,
   companyId: string,
   typeId: string | undefined,
+  db: DocumentDb = prisma,
 ): Promise<DocumentInstanceResult[]> {
   const rows: DocumentInstanceResult[] = [];
   let cursor: string | undefined;
   for (;;) {
-    const page = await prisma.documentInstance.findMany({
+    const page = await db.documentInstance.findMany({
       where: cursor === undefined ? where : { AND: [where, { id: { gt: cursor } }] },
       orderBy: { id: 'asc' },
       take: DOCUMENT_SCAN_PAGE_SIZE,
@@ -613,6 +615,7 @@ function buildSearchOr(options: ListDocumentsPageOptions): Prisma.DocumentInstan
 export async function listDocumentsPage(
   companyId: string,
   options: ListDocumentsPageOptions,
+  db: DocumentDb = prisma,
 ): Promise<ListDocumentsPageResult> {
   const searchOr = buildSearchOr(options);
   const where: Prisma.DocumentInstanceWhereInput = {
@@ -636,18 +639,18 @@ export async function listDocumentsPage(
   const hasDateFilter = !!(options.dateFrom || options.dateTo);
   if (!hasDateFilter) {
     const [items, total] = await Promise.all([
-      prisma.documentInstance.findMany({
+      db.documentInstance.findMany({
         where,
         orderBy,
         skip: (options.page - 1) * options.pageSize,
         take: options.pageSize,
       }),
-      prisma.documentInstance.count({ where }),
+      db.documentInstance.count({ where }),
     ]);
     return { items, total, page: options.page, pageSize: options.pageSize };
   }
 
-  const candidates = await scanEveryMatchingDocument(where, companyId, options.typeId);
+  const candidates = await scanEveryMatchingDocument(where, companyId, options.typeId, db);
   const dateFieldKey = options.dateFieldKey;
   const fromMs = options.dateFrom ? dayMs(options.dateFrom) : undefined;
   const toMs = options.dateTo ? dayMs(options.dateTo) : undefined;
@@ -714,9 +717,10 @@ function compareBySortField(
 export async function findOwnedDocumentsByIds(
   companyId: string,
   ids: readonly string[],
+  db: DocumentDb = prisma,
 ): Promise<DocumentInstanceResult[]> {
   if (ids.length === 0) return [];
-  return prisma.documentInstance.findMany({ where: { companyId, id: { in: [...new Set(ids)] } } });
+  return db.documentInstance.findMany({ where: { companyId, id: { in: [...new Set(ids)] } } });
 }
 
 /**
@@ -752,6 +756,12 @@ async function assertNothingDependsOn(
   companyId: string,
   id: string,
 ): Promise<void> {
+  if (await tx.projectDocumentLink.count({ where: { companyId, documentId: id } })) {
+    throw new ConflictException({
+      code: 'DOCUMENT_HAS_RECONCILIATION_LINKS',
+      message: 'A reconciliation project links to this document. Unlink it before deleting.',
+    });
+  }
   if ((await tx.documentSchedule.count({ where: { companyId, sourceDocumentId: id } })) > 0) {
     throw new ConflictException({
       message: 'A recurrence uses this document as its template. Delete the recurrence first.',

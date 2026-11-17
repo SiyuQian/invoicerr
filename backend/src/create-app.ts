@@ -165,18 +165,19 @@ export async function createApp(module: Type<unknown> = AppModule): Promise<INes
     }),
   );
 
+  // Both JSON limits retain the original bytes for webhook HMAC verification.
+  const captureRawBody: bodyParser.OptionsJson['verify'] = (req, _res, buf) => {
+    (req as typeof req & { rawBody?: Buffer }).rawBody = buf;
+  };
+  const defaultJsonParser = bodyParser.json({ limit: '1mb', verify: captureRawBody });
+  const importJsonParser = bodyParser.json({ limit: '2mb', verify: captureRawBody });
   app.use(
-    skipBodyParserFor(
-      authBasePath,
-      bodyParser.json({
-        limit: '1mb',
-        // Capture the raw body buffer so webhook HMAC verification can operate on the
-        // original bytes (re-serialising a parsed JSON object is unreliable for HMAC).
-        verify: (req, _res, buf) => {
-          (req as any).rawBody = buf;
-        },
-      }),
-    ),
+    skipBodyParserFor(authBasePath, (req, res, next) => {
+      const isImport =
+        req.method === 'POST' &&
+        /^\/api\/project-reconciliation\/projects\/[^/]+\/import\/(preview|confirm)\/?$/.test(req.path);
+      return (isImport ? importJsonParser : defaultJsonParser)(req, res, next);
+    }),
   );
   // Mollie's webhook (`payments/providers/mollie/mollie-provider.ts`) is the one inbound request this
   // backend accepts as `application/x-www-form-urlencoded` (`id=tr_xxx`, nothing else) —
@@ -194,9 +195,7 @@ export async function createApp(module: Type<unknown> = AppModule): Promise<INes
       bodyParser.urlencoded({
         extended: false,
         limit: '64kb',
-        verify: (req, _res, buf) => {
-          (req as any).rawBody = buf;
-        },
+        verify: captureRawBody,
       }),
     ),
   );

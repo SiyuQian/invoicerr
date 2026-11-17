@@ -16,6 +16,9 @@ const SAMPLE_KEYS = new Set([
 const KEPT_VISIBLE = new Set([
   "components/documents/document-totals.tsx|totals.warnings.map(",
   "components/widgets/widget-renderers/metric-widget.tsx|metric.warnings.map(",
+  // Reconciliation keeps concise financial uncertainty and omitted amount/count visible;
+  // each server explanation is disclosed by the existing ProseHelp component.
+  "pages/(app)/project-reconciliation/_components/read-parts.tsx|warnings.map(",
   "components/documents/mark-quote-accepted-dialog.tsx|documents.acceptance.dialogWarning",
   "pages/(app)/settings/_components/billing.settings.tsx|settings.billing.billingEmail.noneOnFileNotice",
   "pages/(app)/settings/_components/billing.settings.tsx|settings.billing.refundNotice.prefix",

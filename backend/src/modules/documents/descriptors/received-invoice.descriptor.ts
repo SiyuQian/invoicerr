@@ -29,19 +29,9 @@ const PAYMENT_METHOD_OPTIONS = BUILT_IN_PAYMENT_METHODS.map((method) => ({
  *    amount yet" (see that same handler) — enough to know when to push PDP's own "paid" buyer status,
  *    not a full ledger.
  *
- * KNOWN GAP, documented rather than silently shipped: registering this action also activates the
- * GENERIC settlement badge/endpoint (`documents.service.ts#getSettlement`, `document-list.tsx`'s own
- * `showSettlementBadge`) — which computes its own "gross total" via `totals/compute-totals.ts`, a
- * type-agnostic engine that sums ONLY from a `kind: 'array'` `lines` field, with NO knowledge of this
- * descriptor's own FLAT `grossAmount` field. For a PDP-sourced import (the ONLY reception source this
- * task adds), `lines` is populated by the SAME structural extraction that reads `grossAmount`, so the
- * two normally agree. For a MANUALLY-uploaded received invoice with genuinely no extractable lines (a
- * plain scanned PDF — the base case this type exists to still accept, see this file's own header),
- * `lines` stays empty and the GENERIC badge would compute a gross of ZERO, trivially "settled" before
- * any payment — a real, narrow UI-badge inaccuracy, NOT a data-integrity issue: the "paid" PDP push
- * threshold in `actions/received-invoice-actions.ts` reads `data.grossAmount` DIRECTLY, never this
- * generic engine, so it stays correct regardless. Revisit if a real need makes this badge's own
- * accuracy matter for a lines-less record specifically.
+ * Settlement and the totals endpoint use the recorded flat supplier gross, including when no
+ * lines could be extracted. Absent supplier net/VAT stay unknown; informational lines do not
+ * replace those recorded totals. Payment completion still uses the recorded gross directly.
  */
 const RECORD_PAYMENT_PARAMS: DocumentFieldDescriptor[] = [
   {

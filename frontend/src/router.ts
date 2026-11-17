@@ -27,6 +27,8 @@ export type Path =
   | `/payment-methods`
   | `/portal`
   | `/portal/:token`
+  | `/project-reconciliation`
+  | `/project-reconciliation/:id`
   | `/settings/:tab?`
   | `/signature/:token`
   | `/statistics`
@@ -38,6 +40,7 @@ export type Params = {
   '/documents/:typeId/new': { typeId: string }
   '/legal/:slug': { slug: string }
   '/portal/:token': { token: string }
+  '/project-reconciliation/:id': { id: string }
   '/settings/:tab?': { tab?: string }
   '/signature/:token': { token: string }
 }

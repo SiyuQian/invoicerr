@@ -62,6 +62,9 @@ export const API_KEY_SCOPES = [
   // but `time-tracking:read` would satisfy the coarse "holds ANY document scope" fallback.
   'time-tracking:read',
   'time-tracking:write',
+  // Reconciliation additionally requires every financial resource's read-equivalent scope.
+  'project-reconciliation:read',
+  'project-reconciliation:write',
 ] as const;
 
 export type ApiKeyScope = (typeof API_KEY_SCOPES)[number];

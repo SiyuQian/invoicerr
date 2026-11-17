@@ -81,6 +81,10 @@ vi.mock('@/prisma/prisma.service', () => {
       documentArchive: {
         findFirst: vi.fn(async () => null),
       },
+      // This company has no signing certificate; keep the real unsigned PDF path.
+      companySigningCertificate: {
+        findUnique: vi.fn(async () => null),
+      },
     },
   };
 });

@@ -1,0 +1,412 @@
+{
+  "companyHistoricalLink": {
+    "sourceId": "invented-customer-row",
+    "caseSourceId": "invented-customer-row",
+    "role": "CUSTOMER_INVOICE",
+    "historical": {
+      "issuer": "Invented company",
+      "recipient": "Invented customer",
+      "number": "EX-CUSTOMER",
+      "issueDate": "2026-10-01",
+      "dueDate": "2026-10-31",
+      "currency": "NZD",
+      "grossMinor": 987654,
+      "netMinor": 900000,
+      "vatMinor": 87654,
+      "reportedStatus": "Needs review",
+      "sourceSystem": "ledgerly",
+      "sourceId": "invented-customer-row",
+      "sourceAsOf": "2026-11-01T00:00:00Z",
+      "sourceReference": "Ledgerly project invented-source-project; row invented-customer-row; invoice EX-CUSTOMER"
+    },
+    "candidates": [
+      {
+        "documentId": "invented-own-invoice",
+        "typeId": "invoice",
+        "basis": "CONTEXTUAL_REFERENCE",
+        "financial": {
+          "documentId": "invented-own-invoice",
+          "typeId": "invoice",
+          "status": "sent",
+          "displayNumber": "EX-CUSTOMER",
+          "currency": "NZD",
+          "grossMinor": 8700,
+          "netMinor": 8700,
+          "vatMinor": 0,
+          "paymentKnowledge": "KNOWN",
+          "settlement": {
+            "paidMinor": 1000,
+            "creditedMinor": 200,
+            "outstandingMinor": 7500,
+            "excessMinor": 0,
+            "settled": false
+          },
+          "payments": [
+            {
+              "source": "document-payment",
+              "id": "invented-payment",
+              "documentAmountMinor": 1000,
+              "originalAmountMinor": 1000,
+              "originalCurrency": "NZD",
+              "paidOn": "2026-10-02T00:00:00Z"
+            }
+          ],
+          "sourceVersion": "5aace7f6cf6b4042475a23117766f832e3ac1a10fd187a5ecbd6ba6021f7ae7f",
+          "warnings": []
+        }
+      }
+    ],
+    "selectedMatch": {
+      "sourceId": "invented-customer-row",
+      "documentId": "invented-own-invoice",
+      "typeId": "invoice",
+      "caseSourceId": "invented-customer-row"
+    },
+    "existingLinkId": null,
+    "action": "CREATE"
+  },
+  "note": "Invented schema-validated wire examples. Hashes/IDs are illustrative and cannot authorize a live import. Own canonical amounts intentionally differ from historical share proposal.",
+  "previewInput": {
+    "payload": {
+      "sourceSystem": "ledgerly",
+      "sourceAsOf": "2026-11-01T00:00:00Z",
+      "currency": "NZD",
+      "project": {
+        "id": "invented-source-project",
+        "name": "Invented project",
+        "customerIssuer": "Invented partner",
+        "customerRecipient": "Invented customer",
+        "shareIssuer": "Invented company",
+        "shareRecipient": "Invented partner"
+      },
+      "invoices": [
+        {
+          "id": "invented-customer-row",
+          "projectId": "invented-source-project",
+          "number": "EX-CUSTOMER",
+          "projectName": "Invented project",
+          "issuer": "Invented partner",
+          "recipient": "Invented customer",
+          "kind": "Customer invoice",
+          "status": "Sent",
+          "issueDate": "2026-10-01",
+          "dueDate": "2026-10-31",
+          "paidDate": null,
+          "exGstAmountCents": 10000,
+          "gstAmountCents": 1500,
+          "totalCents": 11500,
+          "sharePercent": 99,
+          "sourceNumber": "EX-CUSTOMER",
+          "linkedInvoiceNumber": "EX-SHARE"
+        },
+        {
+          "id": "invented-share-row",
+          "projectId": "invented-source-project",
+          "number": "EX-SHARE",
+          "projectName": "Invented project",
+          "issuer": "Invented company",
+          "recipient": "Invented partner",
+          "kind": "Internal share",
+          "status": "Sent",
+          "issueDate": "2026-10-01",
+          "dueDate": "2026-10-31",
+          "paidDate": null,
+          "exGstAmountCents": 4000,
+          "gstAmountCents": 600,
+          "totalCents": 4600,
+          "sharePercent": 99,
+          "sourceNumber": "EX-CUSTOMER",
+          "linkedInvoiceNumber": "EX-CUSTOMER"
+        }
+      ]
+    },
+    "selectedMatches": [
+      {
+        "sourceId": "invented-share-row",
+        "documentId": "invented-own-invoice",
+        "typeId": "invoice",
+        "caseSourceId": "invented-customer-row"
+      }
+    ]
+  },
+  "preview": {
+    "previewHash": "7aa0c75992b0af936f616108287c28803f954cb5be2efb7861d14d53dfcd09e8",
+    "sourceHash": "9d60efe5a330d97e7f791a5230ee4ed14bf4ac449f2b0b19e0ed2206814b33de",
+    "projectVersion": "1:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "sourceAsOf": "2026-11-01T00:00:00Z",
+    "proposedCases": [
+      {
+        "caseSourceId": "invented-customer-row",
+        "sourceIds": ["invented-customer-row", "invented-share-row"],
+        "caseId": null,
+        "action": "CREATE",
+        "existing": null,
+        "proposed": {
+          "title": "EX-CUSTOMER",
+          "periodStart": null,
+          "periodEnd": null,
+          "agreedGrossMinor": 4600,
+          "agreedNetMinor": 4000,
+          "agreedVatMinor": 600,
+          "agreementReference": "Ledgerly project invented-source-project; row invented-share-row; invoice EX-SHARE"
+        },
+        "existingSnapshotHash": null,
+        "proposedSnapshotHash": "5e7a0d9599c1caa64256afe1a9a9f5002591f0577e1e10523d537ba4c081e322"
+      }
+    ],
+    "proposedReferences": [
+      {
+        "sourceId": "invented-customer-row",
+        "caseSourceId": "invented-customer-row",
+        "referenceId": null,
+        "action": "CREATE",
+        "existing": null,
+        "proposed": {
+          "issuer": "Invented partner",
+          "recipient": "Invented customer",
+          "number": "EX-CUSTOMER",
+          "issueDate": "2026-10-01",
+          "dueDate": "2026-10-31",
+          "currency": "NZD",
+          "grossMinor": 11500,
+          "netMinor": 10000,
+          "vatMinor": 1500,
+          "reportedStatus": "Sent",
+          "sourceSystem": "ledgerly",
+          "sourceId": "invented-customer-row",
+          "sourceAsOf": "2026-11-01T00:00:00Z",
+          "sourceReference": "Ledgerly project invented-source-project; row invented-customer-row; invoice EX-CUSTOMER"
+        },
+        "proposedSnapshotHash": "f6ca46e9cbac9661c18f7c405ffa9ed773576adf5477f3400bcf84668d194aa6"
+      }
+    ],
+    "proposedLinks": [
+      {
+        "sourceId": "invented-share-row",
+        "caseSourceId": "invented-customer-row",
+        "role": "SETTLEMENT_INCOME",
+        "historical": {
+          "issuer": "Invented company",
+          "recipient": "Invented partner",
+          "number": "EX-SHARE",
+          "issueDate": "2026-10-01",
+          "dueDate": "2026-10-31",
+          "currency": "NZD",
+          "grossMinor": 4600,
+          "netMinor": 4000,
+          "vatMinor": 600,
+          "reportedStatus": "Sent",
+          "sourceSystem": "ledgerly",
+          "sourceId": "invented-share-row",
+          "sourceAsOf": "2026-11-01T00:00:00Z",
+          "sourceReference": "Ledgerly project invented-source-project; row invented-share-row; invoice EX-SHARE"
+        },
+        "candidates": [
+          {
+            "documentId": "invented-own-invoice",
+            "typeId": "invoice",
+            "basis": "CONTEXTUAL_REFERENCE",
+            "financial": {
+              "documentId": "invented-own-invoice",
+              "typeId": "invoice",
+              "status": "sent",
+              "displayNumber": "EX-SHARE",
+              "currency": "NZD",
+              "grossMinor": 8700,
+              "netMinor": 8700,
+              "vatMinor": 0,
+              "paymentKnowledge": "KNOWN",
+              "settlement": {
+                "paidMinor": 1000,
+                "creditedMinor": 200,
+                "outstandingMinor": 7500,
+                "excessMinor": 0,
+                "settled": false
+              },
+              "payments": [
+                {
+                  "source": "document-payment",
+                  "id": "invented-payment",
+                  "documentAmountMinor": 1000,
+                  "originalAmountMinor": 1000,
+                  "originalCurrency": "NZD",
+                  "paidOn": "2026-10-02T00:00:00Z"
+                }
+              ],
+              "sourceVersion": "5aace7f6cf6b4042475a23117766f832e3ac1a10fd187a5ecbd6ba6021f7ae7f",
+              "warnings": []
+            }
+          }
+        ],
+        "selectedMatch": {
+          "sourceId": "invented-share-row",
+          "documentId": "invented-own-invoice",
+          "typeId": "invoice",
+          "caseSourceId": "invented-customer-row"
+        },
+        "existingLinkId": null,
+        "action": "CREATE"
+      }
+    ],
+    "unresolved": [],
+    "errors": [],
+    "counts": {
+      "sourceRows": 2,
+      "casesToCreate": 1,
+      "referencesToCreate": 1,
+      "linksToCreate": 1,
+      "reused": 0,
+      "revisions": 0,
+      "unresolved": 0,
+      "errors": 0
+    }
+  },
+  "confirmBody": {
+    "payload": {
+      "sourceSystem": "ledgerly",
+      "sourceAsOf": "2026-11-01T00:00:00Z",
+      "currency": "NZD",
+      "project": {
+        "id": "invented-source-project",
+        "name": "Invented project",
+        "customerIssuer": "Invented partner",
+        "customerRecipient": "Invented customer",
+        "shareIssuer": "Invented company",
+        "shareRecipient": "Invented partner"
+      },
+      "invoices": [
+        {
+          "id": "invented-customer-row",
+          "projectId": "invented-source-project",
+          "number": "EX-CUSTOMER",
+          "projectName": "Invented project",
+          "issuer": "Invented partner",
+          "recipient": "Invented customer",
+          "kind": "Customer invoice",
+          "status": "Sent",
+          "issueDate": "2026-10-01",
+          "dueDate": "2026-10-31",
+          "paidDate": null,
+          "exGstAmountCents": 10000,
+          "gstAmountCents": 1500,
+          "totalCents": 11500,
+          "sharePercent": 99,
+          "sourceNumber": "EX-CUSTOMER",
+          "linkedInvoiceNumber": "EX-SHARE"
+        },
+        {
+          "id": "invented-share-row",
+          "projectId": "invented-source-project",
+          "number": "EX-SHARE",
+          "projectName": "Invented project",
+          "issuer": "Invented company",
+          "recipient": "Invented partner",
+          "kind": "Internal share",
+          "status": "Sent",
+          "issueDate": "2026-10-01",
+          "dueDate": "2026-10-31",
+          "paidDate": null,
+          "exGstAmountCents": 4000,
+          "gstAmountCents": 600,
+          "totalCents": 4600,
+          "sharePercent": 99,
+          "sourceNumber": "EX-CUSTOMER",
+          "linkedInvoiceNumber": "EX-CUSTOMER"
+        }
+      ]
+    },
+    "selectedMatches": [
+      {
+        "sourceId": "invented-share-row",
+        "documentId": "invented-own-invoice",
+        "typeId": "invoice",
+        "caseSourceId": "invented-customer-row"
+      }
+    ],
+    "previewHash": "7aa0c75992b0af936f616108287c28803f954cb5be2efb7861d14d53dfcd09e8",
+    "requestKey": "invented-import-request",
+    "expectedVersion": "1:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "result": {
+    "result": {
+      "previewHash": "7aa0c75992b0af936f616108287c28803f954cb5be2efb7861d14d53dfcd09e8",
+      "sourceHash": "9d60efe5a330d97e7f791a5230ee4ed14bf4ac449f2b0b19e0ed2206814b33de",
+      "sourceAsOf": "2026-11-01T00:00:00Z",
+      "cases": [
+        {
+          "caseSourceId": "invented-customer-row",
+          "caseId": "invented-case",
+          "created": true
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "invented-customer-row",
+          "referenceId": "invented-reference",
+          "created": true
+        }
+      ],
+      "links": [
+        {
+          "sourceId": "invented-share-row",
+          "linkId": "invented-link",
+          "created": true
+        }
+      ],
+      "unresolved": [],
+      "counts": {
+        "sourceRows": 2,
+        "casesToCreate": 1,
+        "referencesToCreate": 1,
+        "linksToCreate": 1,
+        "reused": 0,
+        "revisions": 0,
+        "unresolved": 0,
+        "errors": 0
+      }
+    },
+    "versionToken": "2:81af7269ab407c522187fcb19426680ce9624be67ed77885ae6b84c53e0404ed",
+    "changed": true
+  },
+  "retry": {
+    "result": {
+      "previewHash": "7aa0c75992b0af936f616108287c28803f954cb5be2efb7861d14d53dfcd09e8",
+      "sourceHash": "9d60efe5a330d97e7f791a5230ee4ed14bf4ac449f2b0b19e0ed2206814b33de",
+      "sourceAsOf": "2026-11-01T00:00:00Z",
+      "cases": [
+        {
+          "caseSourceId": "invented-customer-row",
+          "caseId": "invented-case",
+          "created": true
+        }
+      ],
+      "references": [
+        {
+          "sourceId": "invented-customer-row",
+          "referenceId": "invented-reference",
+          "created": true
+        }
+      ],
+      "links": [
+        {
+          "sourceId": "invented-share-row",
+          "linkId": "invented-link",
+          "created": true
+        }
+      ],
+      "unresolved": [],
+      "counts": {
+        "sourceRows": 2,
+        "casesToCreate": 1,
+        "referencesToCreate": 1,
+        "linksToCreate": 1,
+        "reused": 0,
+        "revisions": 0,
+        "unresolved": 0,
+        "errors": 0
+      }
+    },
+    "versionToken": "2:81af7269ab407c522187fcb19426680ce9624be67ed77885ae6b84c53e0404ed",
+    "changed": false
+  }
+}

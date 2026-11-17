@@ -99,3 +99,60 @@ describe("resolveRowAmount", () => {
     })
   })
 })
+
+describe("recorded flat amounts", () => {
+  const received = {
+    ...withLines,
+    id: "received-invoice",
+    fields: [
+      ...withLines.fields.map((field) =>
+        field.key === "currency"
+          ? {
+              ...field,
+              options: [
+                { value: "NZD", label: "NZD" },
+                { value: "BTC", label: "BTC" },
+              ],
+            }
+          : field,
+      ),
+      { key: "netAmount", kind: "money", label: "Net", currencyField: "currency" },
+      { key: "vatAmount", kind: "money", label: "Tax", currencyField: "currency" },
+      { key: "grossAmount", kind: "money", label: "Gross", currencyField: "currency" },
+    ],
+  } as DocumentTypeDescriptor
+  it("shows the recorded supplier gross, never an earlier net field or informational lines", () => {
+    expect(
+      resolveRowAmount(received, {
+        currency: "NZD",
+        netAmount: 75.62,
+        vatAmount: 11.34,
+        grossAmount: 86.96,
+        lines: [],
+      }),
+    ).toEqual({ minor: 8696, currency: "NZD", fieldKey: "grossAmount" })
+    expect(
+      resolveRowAmount(received, {
+        currency: "NZD",
+        grossAmount: 86.96,
+        lines: [{ quantity: 1, unitPrice: 1, vatRate: "0" }],
+      }),
+    ).toEqual({ minor: 8696, currency: "NZD", fieldKey: "grossAmount" })
+  })
+  it("accepts the backend descriptor currency catalog even when the local display catalog is older", () => {
+    expect(resolveRowAmount(received, { currency: "BTC", grossAmount: 1 })).toEqual({
+      minor: 100,
+      currency: "BTC",
+      fieldKey: "grossAmount",
+    })
+  })
+  it.each([
+    { currency: "NZD", grossAmount: 1.001 },
+    { currency: "NZD", grossAmount: Number.MAX_SAFE_INTEGER },
+    { currency: "wat", grossAmount: 1 },
+    { grossAmount: 1 },
+    { currency: "NZD", grossAmount: "1.00" },
+  ])("hides unavailable flat money %j", (data) => {
+    expect(resolveRowAmount(received, data)).toBeNull()
+  })
+})

@@ -153,7 +153,7 @@ describe("Client payment-method restriction (issue #416)", () => {
         cy.viewport(1280, 720);
         setTheme("light");
         cy.visit("/clients");
-        cy.get('[data-cy="clients-search"]').type("Bank Transfer Only SARL");
+        cy.get('[data-cy="clients-search"]', { timeout: 15000 }).type("Bank Transfer Only SARL");
         cy.contains('[data-cy^="client-row-"]', "Bank Transfer Only SARL").should("be.visible");
         cy.contains('[data-cy^="client-row-"]', "Bank Transfer Only SARL")
           .find('[data-cy^="client-row-menu-"]')

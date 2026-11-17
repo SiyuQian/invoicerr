@@ -120,6 +120,7 @@ describe('every resource in API_KEY_SCOPES is classified as document or non-docu
     'clients',
     'articles',
     'time-tracking',
+    'project-reconciliation',
     'company',
     'api-keys',
     'webhooks',
@@ -144,5 +145,14 @@ describe('every resource in API_KEY_SCOPES is classified as document or non-docu
     // what turns "silently" into one red test naming every scope nobody classified.
     expect(unclassified).toEqual([]);
     expect(doubleClassified).toEqual([]);
+  });
+});
+
+describe('reconciliation scopes never grant document access', () => {
+  it('cannot satisfy the coarse document fallback in either mode', () => {
+    for (const scope of ['project-reconciliation:read', 'project-reconciliation:write']) {
+      expect(hasAnyDocumentScope({ scopes: [scope] }, 'read')).toBe(false);
+      expect(hasAnyDocumentScope({ scopes: [scope] }, 'write')).toBe(false);
+    }
   });
 });

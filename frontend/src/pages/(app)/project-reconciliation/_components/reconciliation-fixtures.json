@@ -1,0 +1,642 @@
+{
+  "detail": {
+    "project": {
+      "name": "Invented project",
+      "endCustomerName": "Invented customer",
+      "currency": "NZD",
+      "collectionMode": "PARTNER",
+      "endCustomerClientId": null,
+      "partnerClientId": "invented-partner",
+      "timeProjectId": null,
+      "description": null,
+      "id": "invented-project",
+      "companyId": "invented-company",
+      "status": "ACTIVE",
+      "version": 3,
+      "identityLocked": true,
+      "createdAt": "2026-11-17T00:00:00.000Z",
+      "updatedAt": "2026-11-17T00:00:00.000Z",
+      "endCustomerClient": null,
+      "partnerClient": {
+        "id": "invented-partner",
+        "name": "Invented partner",
+        "inactive": false
+      },
+      "timeProject": null
+    },
+    "cases": {
+      "items": [
+        {
+          "title": "Invented milestone",
+          "periodStart": null,
+          "periodEnd": null,
+          "agreedGrossMinor": 115000,
+          "agreedNetMinor": null,
+          "agreedVatMinor": null,
+          "agreementReference": "Invented agreement",
+          "id": "invented-case",
+          "companyId": "invented-company",
+          "projectId": "invented-project",
+          "status": "OPEN",
+          "version": 1,
+          "createdAt": "2026-11-17T00:00:00.000Z",
+          "updatedAt": "2026-11-17T00:00:00.000Z",
+          "summary": {
+            "customerInvoiced": {
+              "knownMinor": 230000,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "customerCredits": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "customerCollectible": {
+              "knownMinor": 230000,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "customerRemaining": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "agreedSettlement": {
+              "knownMinor": 115000,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "unbilledDifference": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "settlementInvoiced": {
+              "knownMinor": 115000,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "ownRecordedReceipts": {
+              "knownMinor": 115000,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "ownOutstanding": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "partnerBills": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "partnerPaid": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "partnerOutstanding": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            },
+            "projectCosts": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE"
+            }
+          },
+          "sourceMarkedPaid": {
+            "knownMinor": 230000,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "checkedReceipts": {
+            "knownMinor": 230000,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "reportedReceipts": {
+            "knownMinor": 0,
+            "missingCount": 1,
+            "completeness": "UNKNOWN"
+          },
+          "undated": {
+            "checkedReceipts": {
+              "knownMinor": 230000,
+              "missingCount": 0,
+              "completeness": "COMPLETE",
+              "count": 1
+            },
+            "reportedReceipts": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE",
+              "count": 0
+            },
+            "ownRecordedReceipts": {
+              "knownMinor": 0,
+              "missingCount": 0,
+              "completeness": "COMPLETE",
+              "count": 0
+            }
+          },
+          "coverage": {
+            "state": "CURRENT",
+            "invoices": [
+              {
+                "customerInvoiceId": "invented-reference",
+                "current": true,
+                "attestation": {
+                  "sourceAsOf": "2026-11-17T00:00:00.000Z",
+                  "evidenceReference": "Invented complete source set",
+                  "sourceFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                  "attestedBy": "user:invented-reviewer",
+                  "attestedAt": "2026-11-17T00:00:00.000Z"
+                }
+              }
+            ]
+          },
+          "customerInvoices": [
+            {
+              "id": "invented-reference",
+              "companyId": "invented-company",
+              "projectId": "invented-project",
+              "caseId": "invented-case",
+              "documentLinkId": null,
+              "external": {
+                "issuer": "Invented partner",
+                "recipient": "Invented customer",
+                "number": "EXAMPLE-1",
+                "issueDate": "2026-10-01",
+                "dueDate": null,
+                "currency": "NZD",
+                "grossMinor": 230000,
+                "netMinor": null,
+                "vatMinor": null,
+                "reportedStatus": "Paid",
+                "sourceSystem": null,
+                "sourceId": null,
+                "sourceAsOf": "2026-11-17T00:00:00.000Z",
+                "sourceReference": "Invented source export"
+              },
+              "originalGrossMinor": 230000,
+              "creditAdjustmentMinor": 0,
+              "adjustedGrossMinor": 230000,
+              "sourceSnapshot": {
+                "issuer": "Invented partner",
+                "recipient": "Invented customer",
+                "number": "EXAMPLE-1",
+                "issueDate": "2026-10-01",
+                "dueDate": null,
+                "currency": "NZD",
+                "grossMinor": 230000,
+                "netMinor": null,
+                "vatMinor": null,
+                "reportedStatus": "Paid",
+                "sourceSystem": null,
+                "sourceId": null,
+                "sourceAsOf": "2026-11-17T00:00:00.000Z",
+                "sourceReference": "Invented source export"
+              },
+              "snapshotHash": "8f100eeaced2ecd52fe04b1f1a1f06b4e59e9a5e390efbef2b06d17a7f0620be",
+              "createdAt": "2026-11-17T00:00:00.000Z",
+              "updatedAt": "2026-11-17T00:00:00.000Z",
+              "caseTitle": "Invented milestone",
+              "allocatedMinor": 230000,
+              "availableMinor": 0
+            }
+          ],
+          "documentLinks": [
+            {
+              "id": "invented-link",
+              "documentId": "invented-document",
+              "typeId": "invoice",
+              "caseId": "invented-case",
+              "role": "SETTLEMENT_INCOME",
+              "issueDate": "2026-10-01",
+              "financial": {
+                "documentId": "invented-document",
+                "typeId": "invoice",
+                "status": "sent",
+                "displayNumber": "OWN-EXAMPLE-1",
+                "currency": "NZD",
+                "grossMinor": 115000,
+                "netMinor": null,
+                "vatMinor": null,
+                "paymentKnowledge": "KNOWN",
+                "settlement": {
+                  "paidMinor": 115000,
+                  "creditedMinor": 0,
+                  "outstandingMinor": 0,
+                  "excessMinor": 0,
+                  "settled": true
+                },
+                "payments": [
+                  {
+                    "source": "document-payment",
+                    "id": "invented-payment",
+                    "documentAmountMinor": 115000,
+                    "originalAmountMinor": 115000,
+                    "originalCurrency": "NZD",
+                    "paidOn": "2026-11-01T00:00:00.000Z"
+                  }
+                ],
+                "sourceVersion": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "warnings": []
+              }
+            }
+          ],
+          "effectiveReviewState": "OPEN",
+          "exceptions": [
+            {
+              "code": "RECEIPT_DATE_MISSING",
+              "message": "The actual external receipt date is unknown.",
+              "fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "caseId": "invented-case",
+              "blocking": false
+            }
+          ]
+        }
+      ],
+      "nextCursor": null,
+      "total": 1
+    },
+    "versionToken": "3:9889b09a89ef027d7d1a3a0e51deb3b949190a2c1c8097e6b9421f266bcf8d08",
+    "asOf": "2026-11-17T00:00:00.000Z",
+    "sourceFingerprint": "9889b09a89ef027d7d1a3a0e51deb3b949190a2c1c8097e6b9421f266bcf8d08",
+    "summary": {
+      "customerInvoiced": {
+        "knownMinor": 230000,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "customerCredits": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "customerCollectible": {
+        "knownMinor": 230000,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "customerRemaining": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "agreedSettlement": {
+        "knownMinor": 115000,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "unbilledDifference": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "settlementInvoiced": {
+        "knownMinor": 115000,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "ownRecordedReceipts": {
+        "knownMinor": 115000,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "ownOutstanding": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "partnerBills": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "partnerPaid": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "partnerOutstanding": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      },
+      "projectCosts": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE"
+      }
+    },
+    "sourceMarkedPaid": {
+      "knownMinor": 230000,
+      "missingCount": 0,
+      "completeness": "COMPLETE"
+    },
+    "checkedReceipts": {
+      "knownMinor": 230000,
+      "missingCount": 0,
+      "completeness": "COMPLETE"
+    },
+    "reportedReceipts": {
+      "knownMinor": 0,
+      "missingCount": 1,
+      "completeness": "UNKNOWN"
+    },
+    "undated": {
+      "checkedReceipts": {
+        "knownMinor": 230000,
+        "missingCount": 0,
+        "completeness": "COMPLETE",
+        "count": 1
+      },
+      "reportedReceipts": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE",
+        "count": 0
+      },
+      "ownRecordedReceipts": {
+        "knownMinor": 0,
+        "missingCount": 0,
+        "completeness": "COMPLETE",
+        "count": 0
+      }
+    },
+    "attentionCount": 1,
+    "unknownAgreementCount": 0,
+    "effectiveReviewState": "OPEN",
+    "exceptions": [
+      {
+        "code": "RECEIPT_DATE_MISSING",
+        "message": "The actual external receipt date is unknown.",
+        "fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "caseId": "invented-case",
+        "blocking": false
+      }
+    ],
+    "warnings": [],
+    "unallocatedDocumentLinks": []
+  },
+  "list": {
+    "items": [
+      {
+        "project": {
+          "name": "Invented project",
+          "endCustomerName": "Invented customer",
+          "currency": "NZD",
+          "collectionMode": "PARTNER",
+          "endCustomerClientId": null,
+          "partnerClientId": "invented-partner",
+          "timeProjectId": null,
+          "description": null,
+          "id": "invented-project",
+          "companyId": "invented-company",
+          "status": "ACTIVE",
+          "version": 3,
+          "identityLocked": true,
+          "createdAt": "2026-11-17T00:00:00.000Z",
+          "updatedAt": "2026-11-17T00:00:00.000Z",
+          "endCustomerClient": null,
+          "partnerClient": {
+            "id": "invented-partner",
+            "name": "Invented partner",
+            "inactive": false
+          },
+          "timeProject": null
+        },
+        "versionToken": "3:9889b09a89ef027d7d1a3a0e51deb3b949190a2c1c8097e6b9421f266bcf8d08",
+        "asOf": "2026-11-17T00:00:00.000Z",
+        "sourceFingerprint": "9889b09a89ef027d7d1a3a0e51deb3b949190a2c1c8097e6b9421f266bcf8d08",
+        "summary": {
+          "customerInvoiced": {
+            "knownMinor": 230000,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "customerCredits": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "customerCollectible": {
+            "knownMinor": 230000,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "customerRemaining": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "agreedSettlement": {
+            "knownMinor": 115000,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "unbilledDifference": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "settlementInvoiced": {
+            "knownMinor": 115000,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "ownRecordedReceipts": {
+            "knownMinor": 115000,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "ownOutstanding": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "partnerBills": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "partnerPaid": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "partnerOutstanding": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          },
+          "projectCosts": {
+            "knownMinor": 0,
+            "missingCount": 0,
+            "completeness": "COMPLETE"
+          }
+        },
+        "effectiveReviewState": "OPEN",
+        "attentionCount": 1
+      }
+    ],
+    "nextCursor": null,
+    "total": 1
+  },
+  "receipts": {
+    "items": [
+      {
+        "id": "invented-receipt",
+        "companyId": "invented-company",
+        "projectId": "invented-project",
+        "amountMinor": 230000,
+        "currency": "NZD",
+        "paidOn": null,
+        "collector": "Invented partner",
+        "evidenceClass": "EVIDENCE_CHECKED",
+        "sourceReference": "Invented proof",
+        "evidenceReference": "Invented proof",
+        "evidenceUrl": null,
+        "reason": "Human checked invented evidence",
+        "sourceSystem": null,
+        "sourceId": null,
+        "enteredBy": "user:invented-reviewer",
+        "reviewedBy": "user:invented-reviewer",
+        "reviewedAt": "2026-11-17T00:00:00.000Z",
+        "humanAttestation": "Human explicitly attested that the supplied receipt evidence was checked.",
+        "version": 1,
+        "voidedAt": null,
+        "voidedBy": null,
+        "voidReason": null,
+        "createdAt": "2026-11-17T00:00:00.000Z",
+        "updatedAt": "2026-11-17T00:00:00.000Z",
+        "allocations": [
+          {
+            "id": "invented-allocation",
+            "customerInvoiceId": "invented-reference",
+            "amountMinor": 230000,
+            "createdAt": "2026-11-17T00:00:00.000Z",
+            "customerInvoice": {
+              "id": "invented-reference",
+              "caseId": "invented-case",
+              "caseTitle": "Invented milestone",
+              "originalGrossMinor": 230000,
+              "creditAdjustmentMinor": 0,
+              "adjustedGrossMinor": 230000,
+              "allocatedMinor": 230000,
+              "availableMinor": 0,
+              "number": "EXAMPLE-1",
+              "currency": "NZD"
+            }
+          }
+        ],
+        "allocatedMinor": 230000,
+        "unallocatedMinor": 0
+      }
+    ],
+    "nextCursor": null,
+    "total": 1
+  },
+  "customerInvoices": {
+    "items": [
+      {
+        "id": "invented-reference",
+        "companyId": "invented-company",
+        "projectId": "invented-project",
+        "caseId": "invented-case",
+        "documentLinkId": null,
+        "external": {
+          "issuer": "Invented partner",
+          "recipient": "Invented customer",
+          "number": "EXAMPLE-1",
+          "issueDate": "2026-10-01",
+          "dueDate": null,
+          "currency": "NZD",
+          "grossMinor": 230000,
+          "netMinor": null,
+          "vatMinor": null,
+          "reportedStatus": "Paid",
+          "sourceSystem": null,
+          "sourceId": null,
+          "sourceAsOf": "2026-11-17T00:00:00.000Z",
+          "sourceReference": "Invented source export"
+        },
+        "originalGrossMinor": 230000,
+        "creditAdjustmentMinor": 0,
+        "adjustedGrossMinor": 230000,
+        "sourceSnapshot": {
+          "issuer": "Invented partner",
+          "recipient": "Invented customer",
+          "number": "EXAMPLE-1",
+          "issueDate": "2026-10-01",
+          "dueDate": null,
+          "currency": "NZD",
+          "grossMinor": 230000,
+          "netMinor": null,
+          "vatMinor": null,
+          "reportedStatus": "Paid",
+          "sourceSystem": null,
+          "sourceId": null,
+          "sourceAsOf": "2026-11-17T00:00:00.000Z",
+          "sourceReference": "Invented source export"
+        },
+        "snapshotHash": "8f100eeaced2ecd52fe04b1f1a1f06b4e59e9a5e390efbef2b06d17a7f0620be",
+        "createdAt": "2026-11-17T00:00:00.000Z",
+        "updatedAt": "2026-11-17T00:00:00.000Z",
+        "caseTitle": "Invented milestone",
+        "allocatedMinor": 230000,
+        "availableMinor": 0
+      }
+    ],
+    "nextCursor": null,
+    "total": 1
+  },
+  "history": {
+    "items": [
+      {
+        "id": "invented-audit",
+        "actor": "user:invented-reviewer",
+        "occurredAt": "2026-11-17T00:00:00.000Z",
+        "operation": "receipt.create",
+        "affectedRecord": "receipt:invented-receipt",
+        "before": null,
+        "after": {
+          "result": {
+            "id": "invented-receipt",
+            "companyId": "invented-company",
+            "projectId": "invented-project",
+            "amountMinor": 230000,
+            "currency": "NZD",
+            "paidOn": null,
+            "collector": "Invented partner",
+            "evidenceClass": "EVIDENCE_CHECKED",
+            "sourceReference": "Invented proof",
+            "evidenceReference": "Invented proof",
+            "evidenceUrl": null,
+            "reason": "Human checked invented evidence",
+            "sourceSystem": null,
+            "sourceId": null,
+            "enteredBy": "user:invented-reviewer",
+            "reviewedBy": "user:invented-reviewer",
+            "reviewedAt": "2026-11-17T00:00:00.000Z",
+            "humanAttestation": "Human explicitly attested that the supplied receipt evidence was checked.",
+            "version": 1,
+            "voidedAt": null,
+            "voidedBy": null,
+            "voidReason": null,
+            "createdAt": "2026-11-17T00:00:00.000Z",
+            "updatedAt": "2026-11-17T00:00:00.000Z"
+          }
+        },
+        "reason": null
+      }
+    ],
+    "nextCursor": null,
+    "total": 1
+  }
+}

@@ -13,7 +13,7 @@ name: Tests
 #
 # `dev` used to be listed here too, and that cost a full duplicate battery on every single push: this
 # repository keeps a permanent `dev -> main` pull request open, so every commit that lands on `dev`
-# is already tested by that PR's own run. Two identical three-shard Cypress runs, on the same commit,
+# is already tested by that PR's own run. Two identical Cypress runs, on the same commit,
 # answering the same question. If that permanent PR is ever closed for good, put `dev` back on this
 # line in the same commit — otherwise `dev` silently stops being tested, which is the failure this
 # whole comment exists to prevent.
@@ -142,6 +142,9 @@ jobs:
       - name: No literal localhost ports in the Cypress specs
         run: cd e2e && npm run check:ports
 
+      - name: Test the per-spec Cypress runner
+        run: cd e2e && node --test scripts/run-specs.test.mjs
+
   backend-tests:
     if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -216,8 +219,10 @@ jobs:
       # Schematron over it, blew a 30s per-test budget it clears in 4s locally. Fewer workers each
       # getting a real core is the fix; raising that test's timeout again would only have moved the
       # next failure somewhere else.
+      # Reconciliation boots real queues and snapshots Redis, so its whole subtree runs once in
+      # queue-integration's serial step below, where Redis is available and files cannot race.
       - name: Run backend tests (Vitest)
-        run: cd backend && ./node_modules/.bin/vitest run --maxWorkers=2
+        run: cd backend && ./node_modules/.bin/vitest run --maxWorkers=2 --exclude 'src/modules/project-reconciliation/**'
 
   queue-integration:
     if: github.event_name != 'workflow_dispatch'
@@ -312,7 +317,9 @@ jobs:
       # second flag — see that spec's own header), and its own local HTTP receivers need nothing this
       # job does not already set below (`ALLOW_PRIVATE_WEBHOOK_URLS`/`ALLOW_PRIVATE_OUTBOUND_URLS`).
       #
-      # One step, all specs across both directories (Jest is gone, and with it the split this job used
+      # Reconciliation's real AppModule boot and Redis queue snapshots share these dependencies and
+      # must run serially with the queue specs so startup cannot change a concurrent snapshot.
+      # One step, all specs across these directories (Jest is gone, and with it the split this job used
       # to run during the migration — four specs on Vitest, `document-events-bridge.redis.spec.ts`
       # still on Jest because its own `--testPathPattern` could not match "everything in this
       # directory" without also trying, and failing, to load the Vitest-only ones). `--no-file-
@@ -320,7 +327,7 @@ jobs:
       # race. No `--forceExit` equivalent is needed: BullMQ/ioredis keep connections open past the
       # last assertion, but Vitest's own `run` mode exits cleanly on its own once a run finishes —
       # confirmed during the migration.
-      - name: Run document-action and webhook-delivery queue integration specs
+      - name: Run document-action, webhook-delivery and reconciliation integration specs
         env:
           SMTP_HOST: localhost
           SMTP_PORT: 1025
@@ -349,7 +356,7 @@ jobs:
           # ALSO on 127.0.0.1 — same SSRF guard, same TEST-ONLY escape hatch, just the webhook-specific
           # name (`webhook-url-guard.ts` wraps `assertPublicOutboundUrl` under this flag's own check).
           ALLOW_PRIVATE_WEBHOOK_URLS: '1'
-        run: cd backend && ./node_modules/.bin/vitest run --no-file-parallelism modules/documents/queue/__tests__ modules/webhooks/queue/__tests__
+        run: cd backend && ./node_modules/.bin/vitest run --no-file-parallelism modules/documents/queue/__tests__ modules/webhooks/queue/__tests__ src/modules/project-reconciliation
 
       # Session cache invalidation, one test per write, against this job's real Redis and Postgres.
       - name: Run session cache invalidation specs
@@ -380,7 +387,13 @@ jobs:
           MIGRATION_FRESH_TESTS: '1'
         run: cd backend && ./node_modules/.bin/vitest run prisma/migration-client-contacts.spec.ts
 
-  # Three shards, three COMPLETE stacks. This job used to run all 73 specs back to back in one runner:
+      # Replays both the pre-reconciliation upgrade and full fresh history on its own scratch DBs.
+      - name: Run reconciliation migration data-preservation and fresh-schema specs
+        env:
+          MIGRATION_FRESH_TESTS: '1'
+        run: cd backend && ./node_modules/.bin/vitest run --no-file-parallelism src/prisma/migration-project-reconciliation.spec.ts
+
+  # Six shards, six COMPLETE stacks. This job used to run all 73 specs back to back in one runner:
   # 55, 56, 71, 73 and 73 minutes over the five most recent green runs, while every other job in this
   # workflow finished inside 8 — the whole workflow's wall time was this job's alone. Nothing about
   # the suite forced that: each job here already builds its own backend, frontend, Postgres, Redis and
@@ -407,7 +420,7 @@ jobs:
       # reported and the next push re-runs the whole thing to learn what it already could have known.
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5, 6]
     env:
       # `npm run start:test:built` loads backend/.env.test, which pins REDIS_URL to 6399 -- the port the
       # LOCAL dev container publishes. Nothing listens there on a runner, and the backend refuses to
@@ -459,7 +472,7 @@ jobs:
       - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3
       # Whether this run has anything to exercise at all. Measured on 43 sampled pull requests: 13
       # touched neither `backend/` nor `frontend/` (docs, root config, dependency bumps alone) and
-      # still paid a full stack build plus three browser shards to answer a question no application
+      # still paid a full stack build plus browser shards to answer a question no application
       # line had asked. The other 28 touched `backend/` alone and DO need the specs -- they drive real
       # HTTP against the Nest app -- so the filter is "neither side", never "not both".
       #
@@ -511,7 +524,7 @@ jobs:
 
 
       # THE SPLIT RULE, and the one thing to know about it: sort every spec `e2e:run` would have run,
-      # number them from 1, and keep the ones whose number falls on this shard (`NR % 3 == shard % 3`).
+      # number them from 1, and keep the ones whose number falls on this shard (`NR % total == shard % total`).
       # It is computed from the files ON DISK, at run time — so ADDING A SPEC REQUIRES NO CHANGE TO
       # THIS FILE. A hand-written list of spec names here would be the opposite: the day someone adds
       # a spec and does not think to edit CI, that spec silently stops being run by anything, and a
@@ -525,10 +538,10 @@ jobs:
       # with no `CYPRESS_scenario` set.
       #
       # Balance is a consequence of the rule, never a target: hand-tuning which spec lands where would
-      # reintroduce exactly the hand-written list this avoids. The only measured split is the six-shard
-      # one, run 35511926079 (73 specs then on disk, 48m38s of spec time serial): 6m20s–10m34s of spec
-      # time per shard, the long tail being 05-clients.cy.ts alone (4m52s). Those figures are the six-shard measurement; the three-shard split keeps the same
-      # modulo rule, so a spec still lands on the same shard from one run to the next.
+      # reintroduce exactly the hand-written list this avoids. The first hosted 144-spec attempt
+      # exhausted the 75-minute cap on two of three shards with specs still unfinished. Six shards
+      # leave more headroom without raising that cap; failed/incomplete timing lower bounds do not
+      # predict a successful run's duration.
       # `LC_ALL=C sort` pins the ordering to bytes rather than to whatever locale the runner image
       # happens to ship, so a given spec lands on the same shard here and on a developer machine.
       - name: Select this shard's specs
@@ -539,6 +552,7 @@ jobs:
         # five minutes of `npm ci` and a booted stack.
         env:
           SHARD: ${{ matrix.shard }}
+          SHARD_TOTAL: ${{ strategy.job-total }}
         run: |
           set -euo pipefail
           cd "$GITHUB_WORKSPACE/e2e"
@@ -549,17 +563,17 @@ jobs:
           # assumes an ORDINARY, non-demo instance): see the dedicated `cypress-run-demo` job below,
           # this workflow's own `cypress-run-saas` pattern for an identical isolated-mode lane.
           all=$(printf '%s\n' cypress/e2e/*.cy.ts | grep -v '^cypress/e2e/100-demo-mode\.cy\.ts$' | LC_ALL=C sort)
-          specs=$(echo "$all" | awk -v shard="$SHARD" 'NR % 3 == shard % 3')
-          # Empty is never legitimate here - the specs on disk split across three shards give dozens
+          specs=$(echo "$all" | awk -v shard="$SHARD" -v total="$SHARD_TOTAL" 'NR % total == shard % total')
+          # Empty is never legitimate here - the specs on disk split across six shards give dozens
           # each - so it means the glob matched nothing and `--spec ""` would have made Cypress run the
           # config's own pattern instead: a shard quietly running the WHOLE suite, or nothing at all.
           if [ -z "$specs" ]; then
-            echo "::error::shard $SHARD/3 selected no spec out of $(echo "$all" | wc -l): the glob is wrong, not the suite"
+            echo "::error::shard $SHARD/$SHARD_TOTAL selected no spec out of $(echo "$all" | wc -l): the glob is wrong, not the suite"
             exit 1
           fi
-          # Printed in full, every run: the three job logs side by side ARE the proof that the split
+          # Printed in full, every run: the six job logs side by side ARE the proof that the split
           # covers every spec exactly once, without anyone having to trust this awk.
-          echo "shard $SHARD/3: $(echo "$specs" | wc -l) of $(echo "$all" | wc -l) specs:"
+          echo "shard $SHARD/$SHARD_TOTAL: $(echo "$specs" | wc -l) of $(echo "$all" | wc -l) specs:"
           echo "$specs"
           echo "spec=$(echo "$specs" | paste -sd, -)" >> "$GITHUB_OUTPUT"
 
@@ -597,8 +611,8 @@ jobs:
       # `chromium.executablePath()` with no env var needed (see that file's own comment for why that
       # rule exists and why it is checked before the conventional system paths).
       #
-      # All three shards share ONE cache key, on purpose: they want the identical browser, and a
-      # per-shard key would store three copies of the same ~150 MB. On a cold key the three runners race
+      # All six shards share ONE cache key, on purpose: they want the identical browser, and a
+      # per-shard key would store six copies of the same ~150 MB. On a cold key the six runners race
       # to save it — `actions/cache` resolves that by itself (the losers log "Unable to reserve cache
       # … already exists" and carry on), so it is noise in a log, never a failed job.
       - name: Cache Playwright Chromium
@@ -669,8 +683,8 @@ jobs:
           (cd "$GITHUB_WORKSPACE/e2e" && scripts/run-specs.sh "$SPECS" --browser firefox)
 
       # Artifact names carry the shard: `actions/upload-artifact@v4` REFUSES a name another job in the
-      # same run already uploaded (v3 merged them silently), so three shards uploading `backend-logs`
-      # would fail two of the three uploads - the same per-leg naming scenarios.yml already uses.
+      # same run already uploaded (v3 merged them silently), so shards sharing `backend-logs`
+      # would fail all later uploads - the same per-leg naming scenarios.yml already uses.
       - name: Upload backend logs
         if: always() && steps.scope.outputs.needed == 'true'
         # Diagnostics only: an artifact storage outage must not turn green tests red.
@@ -761,7 +775,7 @@ jobs:
       - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3
       # Whether this run has anything to exercise at all. Measured on 43 sampled pull requests: 13
       # touched neither `backend/` nor `frontend/` (docs, root config, dependency bumps alone) and
-      # still paid a full stack build plus three browser shards to answer a question no application
+      # still paid a full stack build plus browser shards to answer a question no application
       # line had asked. The other 28 touched `backend/` alone and DO need the specs -- they drive real
       # HTTP against the Nest app -- so the filter is "neither side", never "not both".
       #
@@ -947,7 +961,7 @@ jobs:
       - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3
       # Whether this run has anything to exercise at all. Measured on 43 sampled pull requests: 13
       # touched neither `backend/` nor `frontend/` (docs, root config, dependency bumps alone) and
-      # still paid a full stack build plus three browser shards to answer a question no application
+      # still paid a full stack build plus browser shards to answer a question no application
       # line had asked. The other 28 touched `backend/` alone and DO need the specs -- they drive real
       # HTTP against the Nest app -- so the filter is "neither side", never "not both".
       #
@@ -1127,7 +1141,7 @@ jobs:
           exit 1
 
   # Branch protection can only require a STABLE list of check names, and this workflow's own names
-  # are not stable: `cypress-run` fans out into `cypress-run (1)` .. `(3)` through its own matrix, and
+  # are not stable: `cypress-run` fans out into `cypress-run (1)` .. `(6)` through its own matrix, and
   # reshaping that matrix breaks protection either way -- shrinking it leaves required shards that
   # never report again, which blocks every PR forever on "Expected -- Waiting for status
   # to be reported"; growing it silently leaves the new shards unrequired. This job is

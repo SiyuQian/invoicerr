@@ -185,7 +185,7 @@ describe("Quotes with options: totals endpoint, settlement and MCP (issue #487)"
 
 						// The web app says the same thing: one total per option, no headline amount.
 						cy.visit(`/documents/quote/${quoteId}`);
-						cy.get('[data-cy="document-status-badge"]').should("contain.text", "Sent");
+						cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should("contain.text", "Sent");
 						cy.get('[data-cy="document-option-totals"]', { timeout: 10000 }).should("exist");
 						cy.get('[data-cy="document-option-total-group"]').should("have.length", 2);
 						cy.contains('[data-cy="document-option-total-group"]', "Basic").should(

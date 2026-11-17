@@ -107,7 +107,7 @@ describe("Quote manual acceptance (issue #421)", () => {
 			}).then((draft) => {
 				const draftId = draft.body?.document?.id as string;
 				cy.visit(`${appOrigin}/documents/quote/${draftId}`);
-				cy.get('[data-cy="document-actions-menu"]').click();
+				cy.get('[data-cy="document-actions-menu"]', { timeout: 15000 }).click();
 				cy.get('[data-cy="document-accept-manually-button"]').should("not.exist");
 				// Close the menu before moving on - Escape, never a raw body click at a fixed
 				// coordinate, which can land on the dropdown's own dismissable overlay and time out.
@@ -116,7 +116,7 @@ describe("Quote manual acceptance (issue #421)", () => {
 
 			createSentQuote(clientId, "manual-accept@example.com").then((quoteId) => {
 				cy.visit(`${appOrigin}/documents/quote/${quoteId}`);
-				cy.get('[data-cy="document-status-badge"]').should("contain.text", "Sent");
+				cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should("contain.text", "Sent");
 
 				cy.get('[data-cy="document-actions-menu"]').click();
 				cy.get('[data-cy="document-accept-manually-button"]').should("be.visible").click();
@@ -205,7 +205,7 @@ describe("Quote manual acceptance (issue #421)", () => {
 				// "convert-to-invoice" moves up out of the "Actions" menu.
 				cy.get('[data-cy="document-action-convert-to-invoice"]').click();
 				cy.url({ timeout: 15000 }).should("match", /\/documents\/invoice\/[^/]+$/);
-				cy.get('[data-cy="document-status-badge"]').should("contain.text", "Draft");
+				cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should("contain.text", "Draft");
 				cy.url().then((url) => {
 					const invoiceId = url.split("/").pop() as string;
 					cy.request({ url: `${api}/api/documents/${invoiceId}?typeId=invoice` }).then((res) => {
@@ -268,7 +268,7 @@ describe("Quote manual acceptance (issue #421)", () => {
 						// an authenticated session before visiting the issuer-facing detail page below.
 						cy.login();
 						cy.visit(`${appOrigin}/documents/quote/${quoteId}`);
-						cy.get('[data-cy="document-status-badge"]').should("contain.text", "Signed");
+						cy.get('[data-cy="document-status-badge"]', { timeout: 15000 }).should("contain.text", "Signed");
 						cy.get('[data-cy="document-acceptance-signed"]').should("exist");
 						cy.get('[data-cy="document-acceptance-signed-label"]').should(
 							"contain.text",

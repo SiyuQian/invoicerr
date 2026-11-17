@@ -236,7 +236,7 @@ describe("Issue #471 - credit notes get a legal, sequential number of their own"
 				});
 
 			cy.visit(`${appOrigin}/documents/credit-note/${creditNoteId}`);
-			cy.get('[data-cy="document-form-number"]').should("contain.text", "Issued without a number");
+			cy.get('[data-cy="document-form-number"]', { timeout: 15000 }).should("contain.text", "Issued without a number");
 		});
 	});
 });

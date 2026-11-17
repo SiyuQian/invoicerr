@@ -21,6 +21,13 @@
  * "reset the instance" call.
  */
 export const INSTANCE_RESET_TABLES: readonly string[] = [
+  'ReconciliationProject',
+  'ReconciliationCase',
+  'CustomerInvoiceReference',
+  'ExternalReceipt',
+  'ExternalReceiptAllocation',
+  'ProjectDocumentLink',
+  'ReconciliationAuditEvent',
   'Company',
   'company_subscription',
   'polar_webhook_event',

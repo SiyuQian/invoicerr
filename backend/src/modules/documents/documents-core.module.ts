@@ -48,6 +48,7 @@ import { registerReceivedInvoiceContributions } from './contributions/received-i
 import { CountryFieldOverlayCatalog } from './country-fields/registry';
 import { VatRateCatalog } from './vat-rates/registry';
 import { DocumentsService } from './documents.service';
+import { FinancialReadService } from './settlement/financial-read.service';
 import { FieldKindRegistry, registerCoreFieldKinds } from './descriptors/field-kinds';
 import { DocumentTypeRegistry } from './descriptors/type-registry';
 import { buildNativeDocumentTypeDescriptors } from './descriptors/native-types';
@@ -624,6 +625,7 @@ function buildEntityReferenceRegistry(
   imports: [ClientsModule, ArticlesModule, DocumentQueueModule, CompanyModule, WebhooksModule],
   providers: [
     DocumentsService,
+    FinancialReadService,
     MailService,
     // Recurrences — `DocumentSchedulesService` is the CRUD half
     // (documents.controller.ts's `schedules/*` routes); `DocumentScheduleSweepRunner` is the
@@ -827,6 +829,7 @@ function buildEntityReferenceRegistry(
   ],
   exports: [
     DocumentsService,
+    FinancialReadService,
     DocumentSchedulesService,
     DocumentScheduleSweepRunner,
     PecNotificheService,

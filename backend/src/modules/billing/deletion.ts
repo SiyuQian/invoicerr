@@ -10,6 +10,7 @@
  *   is journaled inside the deletion transaction and drained after commit.
  */
 import prisma from '@/prisma/prisma.service';
+import { purgeReconciliationForCompany } from '@/modules/project-reconciliation/persistence';
 import { sessionCache } from '@/lib/session-cache';
 import { companyMemberIds } from '@/modules/companies/company-member-ids';
 
@@ -93,6 +94,7 @@ export async function deleteCompanyPermanently(
     await journalCompanyStorageObjects(tx, companyId);
     await tx.webhook.deleteMany({ where: { companyId } });
     const memberIds = await companyMemberIds(tx, companyId);
+    await purgeReconciliationForCompany(tx, companyId);
     await tx.company.delete({ where: { id: companyId } });
     return memberIds;
   });
@@ -129,6 +131,7 @@ export async function deleteCompanyPermanentlyNow(
     await journalCompanyStorageObjects(tx, companyId);
     await tx.webhook.deleteMany({ where: { companyId } });
     const memberIds = await companyMemberIds(tx, companyId);
+    await purgeReconciliationForCompany(tx, companyId);
     await tx.company.delete({ where: { id: companyId } });
     return memberIds;
   });

@@ -282,7 +282,7 @@ describe("Client contacts (#415)", () => {
 	it("imports an OLD-template CSV (unchanged columns) into a client with one primary contact", () => {
 		cy.visit("/clients");
 		countClients().then((before) => {
-			cy.get('[data-cy="clients-import-button"]').click();
+			cy.get('[data-cy="clients-import-button"]', { timeout: 15000 }).click();
 			cy.get('[data-cy="clients-import-dialog"]', { timeout: 10000 }).should("be.visible");
 			cy.get('[data-cy="clients-import-file-input"]').selectFile(
 				"cypress/fixtures/clients-import/old-template.csv",

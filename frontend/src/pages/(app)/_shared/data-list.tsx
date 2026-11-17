@@ -194,15 +194,16 @@ interface ListRowMenuProps {
   label: string
   dataCy?: string
   contentDataCy?: string
+  modal?: boolean
   children: React.ReactNode
 }
 
 /** The row's "⋯" menu. `Tooltip` wraps the trigger from OUTSIDE (nested `asChild` Slots onto one
  *  real `<button>`) rather than through `Button`'s own `tooltip` prop, which would wrap the DOM node
  *  in a component `DropdownMenuTrigger asChild` cannot clone. */
-export function ListRowMenu({ label, dataCy, contentDataCy, children }: ListRowMenuProps) {
+export function ListRowMenu({ label, dataCy, contentDataCy, modal, children }: ListRowMenuProps) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={modal}>
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>

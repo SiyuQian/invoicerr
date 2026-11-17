@@ -12,6 +12,14 @@ import {
 vi.mock('@/prisma/prisma.service', () => ({
   __esModule: true,
   default: {
+    $queryRaw: vi.fn(),
+    reconciliationAuditEvent: { deleteMany: vi.fn() },
+    externalReceiptAllocation: { deleteMany: vi.fn() },
+    customerInvoiceReference: { deleteMany: vi.fn() },
+    externalReceipt: { deleteMany: vi.fn() },
+    projectDocumentLink: { deleteMany: vi.fn() },
+    reconciliationCase: { deleteMany: vi.fn() },
+    reconciliationProject: { deleteMany: vi.fn() },
     webhook: { deleteMany: vi.fn() },
     company: { delete: vi.fn() },
     companySubscription: { findUnique: vi.fn() },
@@ -310,5 +318,56 @@ describe('deleteCompanyPermanentlyNow, manual, OWNER-initiated deletion (danger 
     // this file's own "stale-read guard" tests above, because ACTIVE is never due for AUTOMATIC
     // deletion. This function has no such check: it is one, does not re-read after any await.
     expect(prisma.company.delete).toHaveBeenCalledWith({ where: { id: 'company-1' } });
+  });
+});
+
+describe.each(['scheduled', 'manual'])('%s company deletion reconciliation cleanup', (mode) => {
+  beforeEach(() => {
+    transaction.mockImplementation((fn: (tx: typeof prisma) => unknown) => fn(prisma));
+    resetStorageErasureMocks();
+    findSub.mockResolvedValue(dueRow());
+  });
+  afterEach(() => vi.resetAllMocks());
+
+  it('locks the company and removes only its reconciliation children before company deletion', async () => {
+    const order: string[] = [];
+    (prisma.$queryRaw as Mock).mockImplementation(async () => {
+      order.push('lock');
+      return [];
+    });
+    const delegates = [
+      'externalReceiptAllocation',
+      'customerInvoiceReference',
+      'externalReceipt',
+      'projectDocumentLink',
+      'reconciliationAuditEvent',
+      'reconciliationCase',
+      'reconciliationProject',
+    ] as const;
+    for (const name of delegates) {
+      (prisma[name].deleteMany as Mock).mockImplementation(async ({ where }) => {
+        expect(where).toEqual({ companyId: 'company-1' });
+        order.push(name);
+        return { count: 1 };
+      });
+    }
+    (prisma.company.delete as Mock).mockImplementation(async () => {
+      order.push('company');
+      return {};
+    });
+    if (mode === 'manual') await deleteCompanyPermanentlyNow('company-1', fakeClient());
+    else expect(await deleteCompanyPermanently('company-1', NOW, fakeClient())).toBe(true);
+    expect(order).toEqual(['lock', ...delegates, 'company']);
+  });
+
+  it('aborts company deletion when a child cannot be removed', async () => {
+    (prisma.externalReceiptAllocation.deleteMany as Mock).mockRejectedValue(new Error('cleanup failed'));
+    const attempt =
+      mode === 'manual'
+        ? deleteCompanyPermanentlyNow('company-1', fakeClient())
+        : deleteCompanyPermanently('company-1', NOW, fakeClient());
+    await expect(attempt).rejects.toThrow('cleanup failed');
+    expect(prisma.company.delete).not.toHaveBeenCalled();
+    expect(prisma.pendingStorageErasure.findMany).not.toHaveBeenCalled();
   });
 });

@@ -100,7 +100,7 @@ function createSentInvoice(clientId: string) {
  *  the simulated webhook later signs against. */
 function connectStripe() {
 	cy.visit("/settings/payments");
-	cy.get('[data-cy="payment-provider-stripe-secretkey-input"]').clear().type(STRIPE_SECRET_KEY);
+	cy.get('[data-cy="payment-provider-stripe-secretkey-input"]', { timeout: 15000 }).clear().type(STRIPE_SECRET_KEY);
 	cy.get('[data-cy="payment-provider-stripe-webhooksecret-input"]').clear().type(STRIPE_WEBHOOK_SECRET);
 	cy.get('[data-cy="payment-provider-stripe-connect-button"]').click();
 	cy.get('[data-cy="payment-provider-stripe-status"]', { timeout: 15000 }).should("contain", "Connected");

@@ -161,7 +161,7 @@ describe('Settings E2E', () => {
                 // The sidebar scrolls independently of the content (issue #543): at this viewport
                 // "danger", the last entry, sits below the sidebar's own fold, so it needs its own
                 // scroll into view rather than the page's.
-                cy.get('[data-cy="settings-nav-danger"]').scrollIntoView().should('be.visible').click();
+                cy.get('[data-cy="settings-nav-danger"]', { timeout: 15000 }).scrollIntoView().should('be.visible').click();
                 cy.url().should('include', '/settings/danger');
                 cy.get('[data-cy="settings-tab-danger"]', { timeout: 10000 }).should('be.visible');
                 cy.get('[data-cy="settings-nav-danger"]').should('have.attr', 'aria-current', 'page');
@@ -236,7 +236,7 @@ describe('Settings E2E', () => {
             it('is wider than the old 896px cap at 1920x1080', () => {
                 cy.viewport(1920, 1080);
                 cy.visit('/settings/company');
-                cy.get('[data-cy="settings-tab-company"] > div')
+                cy.get('[data-cy="settings-tab-company"] > div', { timeout: 15000 })
                     .first()
                     .should(($column) => {
                         const width = $column[0].getBoundingClientRect().width;

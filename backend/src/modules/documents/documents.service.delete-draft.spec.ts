@@ -23,6 +23,7 @@ import { DocumentTypeRegistry } from './descriptors/type-registry';
 import { DocumentsController } from './documents.controller';
 import { DocumentsService } from './documents.service';
 import { deleteDocument, lockReferencedDocuments } from './persistence';
+import { purgeReconciliationForCompany } from '../project-reconciliation/persistence';
 import { buildDocumentReferenceProvider } from './references/document-reference.provider';
 import { EntityReferenceRegistry } from './references/reference-registry';
 import { TransportRegistry } from './transports/transport-registry';
@@ -102,7 +103,10 @@ describe('DocumentsService: deleting a draft', () => {
   });
 
   afterEach(async () => {
-    await prisma.company.delete({ where: { id: companyId } });
+    await prisma.$transaction(async (tx) => {
+      await purgeReconciliationForCompany(tx, companyId);
+      await tx.company.delete({ where: { id: companyId } });
+    });
   });
 
   function insertDocument(
@@ -131,6 +135,38 @@ describe('DocumentsService: deleting a draft', () => {
     return (await prisma.documentInstance.count({ where: { id } })) === 1;
   }
 
+  it('returns the reconciliation dependency409 through the real action until explicit unlink', async () => {
+    const document = await insertDocument('invoice', 'draft');
+    const project = await prisma.reconciliationProject.create({
+      data: {
+        companyId,
+        name: 'Invented linked project',
+        endCustomerName: 'Invented customer',
+        currency: 'NZD',
+        collectionMode: 'COMPANY',
+      },
+    });
+    const stage = await prisma.reconciliationCase.create({
+      data: { companyId, projectId: project.id, title: 'Invented stage' },
+    });
+    const link = await prisma.projectDocumentLink.create({
+      data: {
+        companyId,
+        projectId: project.id,
+        documentId: document.id,
+        caseId: stage.id,
+        role: 'CUSTOMER_INVOICE',
+      },
+    });
+    await expect(runDelete('invoice', document.id)).rejects.toMatchObject({
+      status: 409,
+      response: { code: 'DOCUMENT_HAS_RECONCILIATION_LINKS' },
+    });
+    expect(await stillExists(document.id)).toBe(true);
+    await prisma.projectDocumentLink.delete({ where: { id: link.id } });
+    await runDelete('invoice', document.id);
+    expect(await stillExists(document.id)).toBe(false);
+  });
   it('refuses at the API a draft that already carries a number', async () => {
     const controller = new DocumentsController(service, unused, unused, unused, unused);
     const reEdited = await insertDocument('quote', 'draft', { number: 3, displayNumber: 'QUOTE-2026-0003' });
