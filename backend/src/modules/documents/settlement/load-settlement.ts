@@ -1,3 +1,5 @@
+import prisma from '@/prisma/prisma.service';
+import type { DocumentDb } from '../persistence';
 import type { DocumentInstanceResult } from '../actions/action-registry';
 import type { DocumentTypeDescriptor } from '../descriptors/types';
 import { resolveSettlementTotals } from '../totals/document-totals-view';
@@ -9,6 +11,7 @@ export async function loadDocumentSettlement(
   companyId: string,
   descriptor: DocumentTypeDescriptor,
   instance: DocumentInstanceResult,
+  db: DocumentDb = prisma,
 ) {
   const data = instance.data as Record<string, unknown>;
   // Issue #487: a quote with options settles against its accepted option (common lines included),
@@ -21,13 +24,14 @@ export async function loadDocumentSettlement(
     instance.acceptedOption,
     instance.displayNumber ?? instance.id,
   );
-  const payments = await listPayments(companyId, instance.id);
+  const payments = await listPayments(companyId, instance.id, db);
   const { credits, warnings } = await resolveCreditsForDocument(
     companyId,
     descriptor.id,
     instance.id,
     descriptor,
     data,
+    db,
   );
   // `toSettlementPaymentInputs`, never the raw `payments` array directly:
   // since a payment can now be recorded in a currency other than the document's own (converted at

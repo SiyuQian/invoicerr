@@ -1,5 +1,7 @@
 import prisma from '@/prisma/prisma.service';
 
+import type { DocumentDb } from '../persistence';
+
 import { SettlementPaymentInput } from './compute-settlement';
 
 /**
@@ -100,10 +102,23 @@ export async function recordPayment(input: RecordPaymentInput): Promise<Document
 
 /** Every payment recorded against one document, oldest first — the order a "Payments" list reads
  *  naturally (first payment at the top, most recent at the bottom). */
-export async function listPayments(companyId: string, documentId: string): Promise<DocumentPaymentResult[]> {
-  const rows = await prisma.documentPayment.findMany({
-    where: { companyId, documentId },
-    orderBy: { paidAt: 'asc' },
+export async function listPayments(
+  companyId: string,
+  documentId: string,
+  db: DocumentDb = prisma,
+): Promise<DocumentPaymentResult[]> {
+  return listPaymentsForDocuments(companyId, [documentId], db);
+}
+
+export async function listPaymentsForDocuments(
+  companyId: string,
+  documentIds: readonly string[],
+  db: DocumentDb = prisma,
+): Promise<DocumentPaymentResult[]> {
+  if (documentIds.length === 0) return [];
+  const rows = await db.documentPayment.findMany({
+    where: { companyId, documentId: { in: [...new Set(documentIds)] } },
+    orderBy: [{ paidAt: 'asc' }, { id: 'asc' }],
   });
   return rows.map(toPaymentResult);
 }

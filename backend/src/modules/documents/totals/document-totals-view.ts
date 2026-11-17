@@ -3,6 +3,7 @@ import { ConflictException } from '@nestjs/common';
 import { DocumentTypeDescriptor } from '../descriptors/types';
 import { acceptedOptionTotals, computeQuoteOptionTotals, isQuoteWithOptions } from '../options/quote-options';
 import { computeDocumentTotals, DocumentTotals } from './compute-totals';
+import { FinancialTotals, resolveFlatTotals } from './flat-document-totals';
 
 /** One option's own totals, common lines folded in (`computeQuoteOptionTotals`'s own header). */
 export interface DocumentOptionTotalsEntry {
@@ -19,7 +20,8 @@ export interface DocumentOptionTotalsEntry {
  *  - `acceptedOption`: the option whose totals the top-level fields carry, or null.
  *
  * The top level is ONE total or none, never a sum of offers:
- *  - no options: the whole document, exactly as before this field existed;
+ *  - expense/received invoice: the recorded flat amount/gross; unrecorded net/VAT stay null;
+ *  - no options on other types: the whole document, exactly as before this field existed;
  *  - options, one accepted (`acceptedOption` names a CURRENT option): that option's totals, the same
  *    figure the list, the header, the portal and the statistics show since #479
  *    (`acceptedOptionTotals`, the one rule for all of them);
@@ -45,9 +47,12 @@ export function resolveSingleTotals(
   descriptor: DocumentTypeDescriptor,
   data: Record<string, unknown>,
   acceptedOption: string | null | undefined,
-): { totals: DocumentTotals; acceptedOption: string | null } | null {
+): { totals: FinancialTotals; acceptedOption: string | null } | null {
   if (!isQuoteWithOptions(typeId, data)) {
-    return { totals: computeDocumentTotals(descriptor, data), acceptedOption: null };
+    return {
+      totals: resolveFlatTotals(typeId, data) ?? computeDocumentTotals(descriptor, data),
+      acceptedOption: null,
+    };
   }
   const accepted = acceptedOptionTotals(data, acceptedOption);
   return accepted && acceptedOption ? { totals: accepted, acceptedOption } : null;
@@ -86,13 +91,15 @@ export function resolveDocumentTotalsView(
  * type offering "record-payment", which the quote does not), and the MCP tool only asks for an
  * invoice's, so this refusal is only ever met by a direct REST call.
  */
+export type SettlementTotals = FinancialTotals & { grossMinor: number };
+
 export function resolveSettlementTotals(
   typeId: string,
   descriptor: DocumentTypeDescriptor,
   data: Record<string, unknown>,
   acceptedOption: string | null | undefined,
   label: string,
-): DocumentTotals {
+): SettlementTotals {
   const single = resolveSingleTotals(typeId, descriptor, data, acceptedOption);
   if (!single) {
     throw new ConflictException(
@@ -100,5 +107,10 @@ export function resolveSettlementTotals(
         "is no single total to settle against. GET .../totals gives each option's own figures.",
     );
   }
-  return single.totals;
+  if (single.totals.grossMinor === null) {
+    throw new ConflictException(
+      `Document "${label}" has no valid recorded gross amount and currency to settle against.`,
+    );
+  }
+  return { ...single.totals, grossMinor: single.totals.grossMinor };
 }

@@ -1,7 +1,8 @@
 import { DocumentInstanceResult } from '../actions/action-registry';
 import { DocumentTypeDescriptor } from '../descriptors/types';
 import { ServerMessage, serverMessage } from '../messages/server-message';
-import { listAllDocuments } from '../persistence';
+import prisma from '@/prisma/prisma.service';
+import { DocumentDb, listAllDocuments } from '../persistence';
 import { computeDocumentTotals } from '../totals/compute-totals';
 import { linkedCreditNotePricingData } from '../totals/linked-credit-note';
 import { SettlementCreditInput } from './compute-settlement';
@@ -98,17 +99,24 @@ function computeCreditedAmountMinor(
  * companyId+typeId, filter the JSON in memory" convention this module's own
  * credit-note-contributions.ts (`resolveInvoiceLabel`) already uses.
  */
-async function listCreditNotes(companyId: string): Promise<DocumentInstanceResult[]> {
+async function listCreditNotes(
+  companyId: string,
+  db: DocumentDb = prisma,
+): Promise<DocumentInstanceResult[]> {
   // EVERY credit note, paged until exhausted — never a capped page. This list is matched against
   // invoices by `data.invoice` afterwards, so a note left unread is a credit that never reduces the
   // invoice it corrects: the company keeps chasing a customer for money it already credited, and the
   // balance is over-stated by exactly the note's own amount with nothing reporting it. The oldest
   // notes are the ones a capped read kept, so it was always the NEWEST credits that stopped
   // allocating — the ones a company is most likely to be asked about.
-  return listAllDocuments(companyId, {
-    typeId: 'credit-note',
-    orderBy: { field: 'createdAt', direction: 'asc' },
-  });
+  return listAllDocuments(
+    companyId,
+    {
+      typeId: 'credit-note',
+      orderBy: { field: 'createdAt', direction: 'asc' },
+    },
+    db,
+  );
 }
 
 /**
@@ -188,9 +196,10 @@ export async function resolveCreditsForDocument(
   documentId: string,
   descriptor: DocumentTypeDescriptor,
   data: Record<string, unknown>,
+  db: DocumentDb = prisma,
 ): Promise<CreditsForDocument> {
   if (typeId !== 'invoice') return { credits: [], warnings: [] };
-  const creditNotes = await listCreditNotes(companyId);
+  const creditNotes = await listCreditNotes(companyId, db);
   return creditsForInvoiceFromNotes(creditNotes, documentId, descriptor, data);
 }
 
