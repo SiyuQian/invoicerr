@@ -120,6 +120,7 @@ import { DashboardPeriod } from './dto/dashboard-query.dto';
 import { RunActionDto } from './dto/documents.dto';
 import { FormatProviderRegistry, UnknownFormatError } from './formats/format-registry';
 import { DocumentFormatBuildResult, DocumentFormatProvider } from './formats/format-provider';
+import { withIssuedBuyerIdentifiers } from './buyer-identifiers/frozen-buyer-identifiers';
 import { companyToFormatParty, clientToFormatParty } from './formats/party-snapshot';
 import { SemanticBuildError } from './formats/semantic/build-semantic-invoice';
 import { resolveCreditNoteFormatSource } from './formats/credit-note-source';
@@ -2299,7 +2300,7 @@ export class DocumentsService implements OnModuleInit {
     const buildDescriptor = creditNoteSource?.pricingDescriptor ?? descriptor;
     const data = creditNoteSource?.pricingData ?? ((instance.data ?? {}) as Record<string, unknown>);
     const clientId = typeof data.client === 'string' ? data.client : undefined;
-    const [company, client] = await Promise.all([
+    const [company, liveClient] = await Promise.all([
       prisma.company.findUnique({ where: { id: companyId }, include: { partyIdentifiers: true } }),
       // Scoped by companyId — `clientId` is read straight off `data.client`, never checked for
       // existence at write time (descriptors/field-kinds.ts's own comment on the 'reference' kind), so
@@ -2316,11 +2317,12 @@ export class DocumentsService implements OnModuleInit {
     if (!company) {
       throw new NotFoundException(`Company "${companyId}" not found.`);
     }
-    if (!client) {
+    if (!liveClient) {
       throw new BadRequestException(
         'Cannot build a normalized XML export: this invoice has no valid client on file.',
       );
     }
+    const client = withIssuedBuyerIdentifiers(liveClient, instance);
 
     // Cross-border tax — invoice-only: the download is otherwise a generic
     // export shared by any future document type's own `download-xml`-style action. Reuses the

@@ -3,7 +3,9 @@ import { randomUUID } from 'node:crypto';
 import type { Prisma } from '../../../prisma/generated/prisma/client';
 import prisma from '@/prisma/prisma.service';
 import { createLibRedisClient } from '@/lib/redis-connection';
+import { reversePayment } from '../documents/payment-ledger/reverse';
 import { FinancialReadService } from '../documents/settlement/financial-read.service';
+import { recordPayment } from '../documents/settlement/payments';
 import { deleteDocument } from '../documents/persistence';
 import { ReconciliationService } from './service';
 import { ExternalReceiptsService } from './external-receipts';
@@ -83,16 +85,14 @@ describe('document-links and review real Postgres', () => {
       },
     });
   }
-  async function payment(documentId: string, amount = 100) {
-    return prisma.documentPayment.create({
-      data: {
-        companyId,
-        documentId,
-        amountMinor: amount,
-        documentAmountMinor: amount,
-        currency: 'NZD',
-        paidAt: new Date('2026-11-01'),
-      },
+  function payment(documentId: string, amount = 100) {
+    return recordPayment({
+      companyId,
+      documentId,
+      amountMinor: amount,
+      documentAmountMinor: amount,
+      currency: 'NZD',
+      paidAt: new Date('2026-11-01'),
     });
   }
   async function link(
@@ -416,7 +416,7 @@ describe('document-links and review real Postgres', () => {
     const reopened = await review('REOPEN');
     expect(reopened.result.case.status).toBe('OPEN');
   });
-  it('verifies complete direct work, derivesOPEN on payment edit without parent timestamp change and persists reopening on mutation', async () => {
+  it('verifies complete direct work, derives OPEN on payment correction without a parent timestamp change and persists reopening on mutation', async () => {
     await project('COMPANY', false);
     const d = await doc();
     const p = await payment(d.id);
@@ -426,7 +426,8 @@ describe('document-links and review real Postgres', () => {
     expect(accepted.result.case.status).toBe('CLOSED_VERIFIED');
     expect(await sourceState()).toEqual(before);
     const parent = await prisma.documentInstance.findUniqueOrThrow({ where: { id: d.id } });
-    await prisma.documentPayment.update({ where: { id: p.id }, data: { documentAmountMinor: 99 } });
+    await reversePayment(companyId, p.id, { reason: 'Correct payment amount' });
+    await payment(d.id, 99);
     expect((await prisma.documentInstance.findUniqueOrThrow({ where: { id: d.id } })).updatedAt).toEqual(
       parent.updatedAt,
     );
@@ -675,10 +676,8 @@ describe('document-links and review real Postgres', () => {
     const p = await payment(d.id);
     await link(d.id);
     const original = await review();
-    await prisma.documentPayment.update({
-      where: { id: p.id },
-      data: { note: 'Externally corrected evidence' },
-    });
+    await reversePayment(companyId, p.id, { reason: 'Externally corrected evidence' });
+    const replacement = await payment(d.id);
     expect(
       projectReview(await snapshot())
         .cases.find((c) => c.caseId === caseId)!
@@ -692,7 +691,14 @@ describe('document-links and review real Postgres', () => {
     const next = await review();
     expect(next.result.case.status).toBe('CLOSED_VERIFIED');
     expect(next.result.sourceFingerprint).not.toBe(original.result.sourceFingerprint);
-    await prisma.documentPayment.update({ where: { id: p.id }, data: { documentAmountMinor: 99 } });
+    const view = parse(schemas.projectView, await core.getProject(companyId, projectId));
+    expect(view.summary.ownRecordedReceipts.knownMinor).toBe(100);
+    expect(view.cases.items[0].documentLinks[0].financial.payments).toContainEqual(
+      expect.objectContaining({ documentAmountMinor: -100, originalAmountMinor: -100 }),
+    );
+    await reversePayment(companyId, replacement.id, { reason: 'Correct payment amount' });
+    await payment(d.id, 99);
+    expect((await core.getProject(companyId, projectId)).summary.ownOutstanding.knownMinor).toBe(1);
     await expect(review()).rejects.toMatchObject({ response: { code: 'REVIEW_BLOCKED' } });
   });
   it('a later source party mismatch cannot be reverified or accepted', async () => {

@@ -236,6 +236,7 @@ describe('FinancialReadService canonical money', () => {
     { amountMinor: 1.5 },
     { currency: 'wat' },
     { documentAmountMinor: -1 },
+    { documentAmountMinor: -1, amountMinor: -1, reversesPaymentId: 'missing' },
     { documentAmountMinor: Number.MAX_SAFE_INTEGER + 1 },
   ])('discloses unavailable settlement for invalid stored payments %j', async (overrides) => {
     const result = await read('received-invoice', { currency: 'NZD', grossAmount: 86.96 }, [
@@ -245,6 +246,19 @@ describe('FinancialReadService canonical money', () => {
     expect(result.paymentKnowledge).toBe('UNKNOWN');
     expect(result.settlement).toBeNull();
     expect(result.warnings.map((warning) => warning.code)).toContain('SETTLEMENT_UNAVAILABLE');
+  });
+
+  it('keeps a financial source version stable when buyer identifiers are frozen or a payment is sealed', async () => {
+    const invoice = document('received-invoice', { grossAmount: 86.96, currency: 'NZD' });
+    const entry = payment();
+    const service = new FinancialReadService();
+    const ref = { typeId: 'received-invoice' as const, id: invoice.id };
+    const readSource = async () =>
+      (await service.readMany('co-1', [ref], store([invoice], [entry]))).get(financialReadKey(ref))!;
+    const before = await readSource();
+    Object.assign(invoice, { buyerIdentifiers: { vatNumber: 'test' } });
+    Object.assign(entry, { ledgerSequence: 1, reversesPaymentId: null });
+    expect((await readSource()).sourceVersion).toBe(before.sourceVersion);
   });
 
   it('returns typed unavailable entries for missing or wrong-type sources', async () => {

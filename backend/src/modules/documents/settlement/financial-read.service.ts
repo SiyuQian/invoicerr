@@ -111,7 +111,15 @@ export class FinancialReadService {
       const data = (source.data ?? {}) as Record<string, unknown>;
       const sourcePayments = paymentsById.get(source.id) ?? [];
       const notes = ref.typeId === 'invoice' ? (notesByInvoice.get(source.id) ?? []) : [];
-      read.sourceVersion = version([source, sourcePayments, notes]);
+      // Freezing identifiers and sealing existing payments do not change a reviewed balance.
+      const { buyerIdentifiers: _buyerIdentifiers, ...financialSource } = source;
+      read.sourceVersion = version([
+        financialSource,
+        sourcePayments.map(({ ledgerSequence: _ledgerSequence, reversesPaymentId, ...payment }) =>
+          reversesPaymentId ? { ...payment, reversesPaymentId } : payment,
+        ),
+        notes.map(({ buyerIdentifiers: _buyerIdentifiers, ...note }) => note),
+      ]);
       read.currency = isFinancialCurrency(data.currency) ? data.currency : null;
       const validInvoiceLines =
         ref.typeId !== 'invoice' ||
@@ -175,14 +183,27 @@ export class FinancialReadService {
           ...(warning.params ? { params: warning.params } : {}),
         })),
       );
-      const validPayments = sourcePayments.every(
-        (payment) =>
-          Number.isSafeInteger(payment.documentAmountMinor) &&
-          Number.isSafeInteger(payment.amountMinor) &&
-          payment.documentAmountMinor >= 0 &&
-          payment.amountMinor >= 0 &&
-          isFinancialCurrency(payment.currency),
-      );
+      const paymentsByEntry = new Map(sourcePayments.map((payment) => [payment.id, payment]));
+      const validPayments = sourcePayments.every((payment) => {
+        if (
+          !Number.isSafeInteger(payment.documentAmountMinor) ||
+          !Number.isSafeInteger(payment.amountMinor) ||
+          !isFinancialCurrency(payment.currency)
+        ) {
+          return false;
+        }
+
+        if (!payment.reversesPaymentId) return payment.documentAmountMinor >= 0 && payment.amountMinor >= 0;
+
+        const original = paymentsByEntry.get(payment.reversesPaymentId);
+        return (
+          original !== undefined &&
+          !original.reversesPaymentId &&
+          payment.currency === original.currency &&
+          payment.amountMinor === -original.amountMinor &&
+          payment.documentAmountMinor === -original.documentAmountMinor
+        );
+      });
       const paid = sourcePayments.reduce((sum, payment) => sum + payment.documentAmountMinor, 0);
       const credited = credits.reduce((sum, credit) => sum + credit.amountMinor, 0);
       if (
