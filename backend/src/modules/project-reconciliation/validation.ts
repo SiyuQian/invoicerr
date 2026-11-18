@@ -409,8 +409,8 @@ const financialRead = z.strictObject({
     z.strictObject({
       source: z.enum(['document-payment', 'disbursement-event']),
       id,
-      documentAmountMinor: count,
-      originalAmountMinor: count,
+      documentAmountMinor: z.number().int(),
+      originalAmountMinor: z.number().int(),
       originalCurrency: z.string(),
       paidOn: z.string().nullable(),
     }),
