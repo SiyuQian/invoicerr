@@ -312,8 +312,8 @@ describe.each(['scheduled', 'manual'])('%s company deletion reconciliation clean
       order.push('company');
       return {};
     });
-    if (mode === 'manual') await deleteCompanyPermanentlyNow('company-1', fakeClient());
-    else expect(await deleteCompanyPermanently('company-1', NOW, fakeClient())).toBe(true);
+    if (mode === 'manual') await deleteCompanyPermanentlyNow('company-1');
+    else expect(await deleteCompanyPermanently('company-1', NOW)).toBe(true);
     expect(order).toEqual(['lock', ...delegates, 'company']);
   });
 
@@ -321,8 +321,8 @@ describe.each(['scheduled', 'manual'])('%s company deletion reconciliation clean
     (prisma.externalReceiptAllocation.deleteMany as Mock).mockRejectedValue(new Error('cleanup failed'));
     const attempt =
       mode === 'manual'
-        ? deleteCompanyPermanentlyNow('company-1', fakeClient())
-        : deleteCompanyPermanently('company-1', NOW, fakeClient());
+        ? deleteCompanyPermanentlyNow('company-1')
+        : deleteCompanyPermanently('company-1', NOW);
     await expect(attempt).rejects.toThrow('cleanup failed');
     expect(prisma.company.delete).not.toHaveBeenCalled();
     expect(prisma.pendingStorageErasure.findMany).not.toHaveBeenCalled();
