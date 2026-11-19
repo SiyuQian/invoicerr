@@ -42,6 +42,7 @@
  *    (`conformity/pollers/`), which is separate work and is deliberately not guessed at here - the
  *    same named remainder `superpdp-transport.ts`'s own header records for superpdp.
  */
+import { INVOPOP_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -49,6 +50,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 import prisma from '@/prisma/prisma.service';
 import { fromMinor } from '@/utils/financial';
 
@@ -95,7 +97,7 @@ export const INVOPOP_CREDENTIAL_FIELDS: CredentialFieldDescriptor[] = [
   },
 ];
 
-const PROVIDER_ID = 'invopop';
+const PROVIDER_ID = INVOPOP_PROVIDER_ID;
 
 /** Same "the invoice's OWN base descriptor, module-level constant" choice `superpdp-transport.ts` makes,
  *  for the identical reason: this transport is reached ONLY through `invoiceTransportId`, so it is
@@ -138,8 +140,12 @@ async function requireConnectedInvopop(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<InvopopCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, PROVIDER_ID);
-  const credentials = resolved && extractInvopopCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    PROVIDER_ID,
+    extractInvopopCredentials,
+  );
   if (!credentials) {
     logger.warn('Invopop transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',

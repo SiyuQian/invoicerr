@@ -13,12 +13,11 @@
  * live" stayed green while every real deposit was silently PENDING forever. The lifecycle lives in
  * `events[]`, and ONLY there. This poller reads `events[]` and nothing else.
  */
-import {
-  ChannelCredentialsService,
-  ResolvedChannelConfig,
-} from '@/modules/company/channels/channels.service';
+import { PDP_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
+import { ChannelCredentialsService } from '@/modules/company/channels/channels.service';
 
-import { extractSuperPdpCredentials } from '../../transports/superpdp-transport';
+import { resolveChannelCredentials } from '../../transports/resolve-channel-credentials';
+import { extractSuperPdpCredentials, SuperPdpCredentials } from '../../transports/superpdp-transport';
 import { SuperPdpClient, SuperPdpInvoiceEvent } from '../../transports/superpdp/superpdp-client';
 import {
   AuthorityStatusPoller,
@@ -26,7 +25,7 @@ import {
   RawAuthorityEvent,
 } from '../authority-status-poller';
 
-export const PDP_PROVIDER_ID = 'pdp';
+export { PDP_PROVIDER_ID };
 
 /** fr:202 ("Reçue par la plateforme" — the platform's own final ACCEPTANCE) and fr:213 ("Rejetée") —
  *  the only two codes the live proof ever observed ending a deposit's lifecycle. Every
@@ -88,15 +87,20 @@ function parseInvoiceId(transportRef: string): number {
   return invoiceId;
 }
 
-async function resolveSuperPdpConfig(
+async function resolveSuperPdpCredentials(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
-): Promise<ResolvedChannelConfig> {
-  const resolved = await channelCredentials.resolveActive(companyId, PDP_PROVIDER_ID);
-  if (!resolved || !extractSuperPdpCredentials(resolved)) {
+): Promise<SuperPdpCredentials> {
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    PDP_PROVIDER_ID,
+    extractSuperPdpCredentials,
+  );
+  if (!credentials) {
     throw new ChannelNotConnectedError(PDP_PROVIDER_ID);
   }
-  return resolved;
+  return credentials;
 }
 
 export function buildSuperPdpStatusPoller(deps: SuperPdpStatusPollerDeps): AuthorityStatusPoller {
@@ -107,8 +111,7 @@ export function buildSuperPdpStatusPoller(deps: SuperPdpStatusPollerDeps): Autho
     isRejection: (statusCode) => statusCode === PDP_REJECTED_STATUS_CODE,
 
     async poll(companyId: string, transportRef: string): Promise<RawAuthorityEvent[]> {
-      const resolved = await resolveSuperPdpConfig(deps.channelCredentials, companyId);
-      const credentials = extractSuperPdpCredentials(resolved)!; // resolveSuperPdpConfig already proved non-null
+      const credentials = await resolveSuperPdpCredentials(deps.channelCredentials, companyId);
 
       const client = new SuperPdpClient({ ...credentials, apiStyle: 'superpdp' });
       const invoiceId = parseInvoiceId(transportRef);

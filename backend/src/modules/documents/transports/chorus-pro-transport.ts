@@ -97,6 +97,7 @@
  * `conformity/authority-status-poller.ts` exists for — `conformity/pollers/chorus-pro-status-poller.ts`
  * registers one, the same shape `superpdp-status-poller.ts`/`ksef-status-poller.ts` already hold.
  */
+import { CHORUS_PRO_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -104,6 +105,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 import { getIdentifier } from '@/utils/entity-identifiers';
 import prisma from '@/prisma/prisma.service';
 
@@ -169,7 +171,7 @@ export interface ChorusProTransportDeps {
   facturxFormatProvider: DocumentFormatProvider;
 }
 
-export const CHORUS_PRO_PROVIDER_ID = 'chorus-pro';
+export { CHORUS_PRO_PROVIDER_ID };
 
 /** Same "the invoice's OWN base descriptor, module-level constant" choice every sibling transport
  *  makes for the identical reason - see `superpdp-transport.ts`'s own header. */
@@ -292,8 +294,12 @@ async function requireConnectedChorusPro(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<ChorusProCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, CHORUS_PRO_PROVIDER_ID);
-  const credentials = resolved && extractChorusProCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    CHORUS_PRO_PROVIDER_ID,
+    extractChorusProCredentials,
+  );
   if (!credentials) {
     logger.warn('Chorus Pro transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',
@@ -311,8 +317,9 @@ async function requireConnectedChorusPro(
 
 /** Builds a REAL `ChorusProClient` for this company's connected credentials — one instance per call,
  *  same "no shared, cross-request state beyond the client's own short-lived token cache" choice every
- *  sibling transport's own client construction makes. */
-function buildClient(credentials: ChorusProCredentials): ChorusProClient {
+ *  sibling transport's own client construction makes. Also used by
+ *  `conformity/pollers/chorus-pro-status-poller.ts`, so the poller reaches the same endpoints. */
+export function buildChorusProClient(credentials: ChorusProCredentials): ChorusProClient {
   const urls = chorusProUrlsFor(credentials.environment);
   const config: ChorusProClientConfig = { ...urls, ...credentials };
   return new ChorusProClient(config, new FetchChorusProHttpPort());
@@ -464,7 +471,7 @@ export function buildChorusProTransport(deps: ChorusProTransportDeps): DocumentT
         },
       });
 
-      const chorusProClient = buildClient(credentials);
+      const chorusProClient = buildChorusProClient(credentials);
 
       let numeroFluxDepot: string;
       try {

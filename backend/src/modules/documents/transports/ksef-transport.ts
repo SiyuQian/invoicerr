@@ -27,6 +27,7 @@
  * never a success: a reference nobody can look up is not a reference at all (the exact same
  * hard-success contract `superpdp-transport.ts` already enforces for its own deposit id).
  */
+import { KSEF_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -34,6 +35,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
 import { DocumentFormatProvider } from '../formats/format-provider';
@@ -79,7 +81,7 @@ export interface KsefTransportDeps {
   fa3FormatProvider: DocumentFormatProvider;
 }
 
-const PROVIDER_ID = 'ksef';
+const PROVIDER_ID = KSEF_PROVIDER_ID;
 
 /** Same "module-level constant, reached only through invoiceTransportId" choice `superpdp-transport.ts`
  *  makes for the identical reason — see that file's own header. */
@@ -113,8 +115,12 @@ async function requireConnectedKsef(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<KsefCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, PROVIDER_ID);
-  const credentials = resolved && extractKsefCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    PROVIDER_ID,
+    extractKsefCredentials,
+  );
   if (!credentials) {
     logger.warn('KSeF transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',

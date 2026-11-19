@@ -23,6 +23,7 @@
  * the hard-success contract (documentation/docs/developer-guide/live-testing.md): a reference nobody can look up is not a
  * reference at all.
  */
+import { PDP_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -30,6 +31,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 import prisma from '@/prisma/prisma.service';
 
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
@@ -81,7 +83,7 @@ export interface SuperPdpTransportDeps {
   facturxFormatProvider: DocumentFormatProvider;
 }
 
-const PROVIDER_ID = 'pdp';
+const PROVIDER_ID = PDP_PROVIDER_ID;
 
 /** Same "the invoice's OWN base descriptor, module-level constant" choice `invoice-actions.ts` makes
  *  for the identical reason — this transport is reached ONLY through `invoiceTransportId` (see
@@ -109,8 +111,12 @@ async function requireConnectedSuperPdp(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<SuperPdpCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, PROVIDER_ID);
-  const credentials = resolved && extractSuperPdpCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    PROVIDER_ID,
+    extractSuperPdpCredentials,
+  );
   if (!credentials) {
     logger.warn('SuperPDP transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',

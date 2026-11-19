@@ -17,12 +17,19 @@ import {
 import { defaultChannelPolicyCatalog } from '@/modules/documents/transports/channel-policy/registry';
 import { ChannelPolicyFact, ChannelRequirement } from '@/modules/documents/transports/channel-policy/schema';
 import { defaultOperatorCatalog } from '@/modules/documents/operators/registry';
-import { defaultReportingObligationCatalog } from '@/modules/documents/reporting/registry';
+import { defaultReportingObligationCatalogV2 } from '@/modules/documents/reporting/obligation-catalog';
+import type {
+  ChannelDischarger,
+  ObligationKind,
+  ObligationPeriod,
+  ObligationTrigger,
+} from '@/modules/documents/reporting/obligation-v2';
 import { ReportableDocumentType } from '@/modules/documents/reporting/schema';
 import { decryptJson, encryptJson, isEncryptionAvailable } from '@/utils/secret-crypto';
 import { credentialAudit } from '@/utils/credential-access-audit';
 import { ChannelEnvironment, CompanyChannelConfig } from '../../../../prisma/generated/prisma/client';
 import { byCodeUnit } from '@/lib/compare';
+import { toChannelEnvironment } from '../channel-environment';
 
 /** What a transport gets back once credentials are resolved: `config` is already decrypted, and this
  *  shape never leaves the server. */
@@ -120,20 +127,26 @@ export interface ChannelPolicyBanner {
  */
 export interface ReportingObligationStatus {
   providerId: string;
+  /** The platform the card shows this row under: the channel's `platformId`, else `providerId`.
+   *  France's "pdp" transport rows carry "fr-pa", so the one accredited platform shows once. */
+  platformId: string;
   appliesTo: ReportableDocumentType;
   provenance: PolicyProvenance;
+  /** The v2 obligation this row comes from (issue #767). */
+  obligationId: string;
+  kind: ObligationKind;
+  /** The event that creates the duty: the settings card says "when sent", "when paid", ... */
+  trigger: ObligationTrigger;
+  /** Who discharges it: `transport` means the delivery itself declares, nothing else to do. */
+  dischargedBy: ChannelDischarger;
+  /** Only for a periodic obligation (`timing.period`). */
+  period?: ObligationPeriod;
 }
 
 export interface UpsertChannelConfigBody {
   environment?: string;
   config: Record<string, unknown>;
   isActive?: boolean;
-}
-
-/** Coerce an untrusted string to ChannelEnvironment, defaulting to TEST. */
-function toChannelEnvironment(value: string | undefined): ChannelEnvironment {
-  if (value === ChannelEnvironment.PROD) return ChannelEnvironment.PROD;
-  return ChannelEnvironment.TEST;
 }
 
 /** 256 random bits, hex-encoded. Kept in the clear because it is a scoping label, not a secret, and the
@@ -551,17 +564,30 @@ export class ChannelCredentialsService {
    * `channel-policy/data/*.json` just above, but a categorically different fact: NEVER a hint about
    * which TRANSPORT to use, always "declare this invoice's data to this authority, regardless of how
    * it was delivered". Empty for every country with no reporting-obligation file (the overwhelming
-   * majority) — see `ReportingObligationCatalog.factsFor`'s own header.
+   * majority): see `ReportingObligationCatalogV2.obligationsFor`.
+   *
+   * Read from the v2 catalog (issue #767), one row per document type and channel of each obligation:
+   * an upgraded legacy fact has exactly one of each, so the rows are the legacy facts, in file order.
    */
   async reportingObligations(companyId: string): Promise<ReportingObligationStatus[]> {
     const countryCode = await resolveCompanyCountryCode(companyId);
     if (!countryCode) return [];
 
-    return defaultReportingObligationCatalog.factsFor(countryCode).map((fact) => ({
-      providerId: fact.providerId,
-      appliesTo: fact.appliesTo,
-      provenance: fact.provenance,
-    }));
+    return defaultReportingObligationCatalogV2.obligationsFor(countryCode).flatMap((obligation) =>
+      obligation.scope.documentTypes.flatMap((appliesTo) =>
+        obligation.channels.map((channel) => ({
+          providerId: channel.id,
+          platformId: channel.platformId ?? channel.id,
+          appliesTo,
+          provenance: obligation.legalBasis.provenance,
+          obligationId: obligation.id,
+          kind: obligation.kind,
+          trigger: obligation.trigger,
+          dischargedBy: channel.dischargedBy,
+          period: obligation.timing && 'period' in obligation.timing ? obligation.timing.period : undefined,
+        })),
+      ),
+    );
   }
 
   /**

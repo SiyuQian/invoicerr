@@ -12,7 +12,9 @@
  * pretends this integration was exercised. Everything below is the published schema, not a guess at
  * a private API.
  */
+import { PDP_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { ChannelCredentialsService } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from '../../transports/resolve-channel-credentials';
 
 import {
   ChannelNotConnectedError,
@@ -24,7 +26,7 @@ import { EReportingAdapter } from '../ereporting-adapter';
 import { SuperPdpClient, SuperPdpB2cTransactionInput } from '../../transports/superpdp/superpdp-client';
 import { extractSuperPdpCredentials } from '../../transports/superpdp-transport';
 
-const TRANSPORT_ID = 'pdp';
+const TRANSPORT_ID = PDP_PROVIDER_ID;
 
 /** The four values the platform's `company_patch.vat_regime` enum accepts, keyed by the company
  *  profile's own French regime. A value outside this table is refused: the platform would reject it
@@ -48,8 +50,12 @@ async function requireCredentials(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<{ baseUrl: string; clientId: string; clientSecret: string }> {
-  const resolved = await channelCredentials.resolveActive(companyId, TRANSPORT_ID);
-  const credentials = resolved && extractSuperPdpCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    TRANSPORT_ID,
+    extractSuperPdpCredentials,
+  );
   if (!credentials) {
     // Let the runner classify this as `report:blocked`, never as a declaration.
     throw new ChannelNotConnectedError(
@@ -146,6 +152,7 @@ function submitted(
       `Recorded by the accredited platform as ${label} ${reference}. This is the platform's own ` +
       'record, not a tax administration reference: transmission happens on the platform side.',
     authorityId: reference,
+    referenceKind: 'platform',
     observedAt: new Date(),
     rawPayload,
   };
