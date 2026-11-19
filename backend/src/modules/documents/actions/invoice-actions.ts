@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, NotImplementedException } from '@nestjs/common';
+import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { WebhookEvent } from '../../../../prisma/generated/prisma/client';
 import { logger } from '@/logger/logger.service';
@@ -19,12 +19,14 @@ import {
 import { resolveInvoiceValidationTransmission } from '../country-policy/invoice-validation-transmission';
 import { runDomesticInvoiceCurrencyPreflight } from '../country-policy/domestic-currency-issuance';
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
+import { lockedStatusConflict } from '../descriptors/lifecycle';
 import { stripSidecarKeys } from '../descriptors/validate';
 import { takeDocumentNumberForTransitionWithStatus } from '../numbering/take-number';
 import { findOwnedDocument, updateDocumentStatus } from '../persistence';
 import { DocumentEventPublisher } from '../queue/document-events';
 import { buildDocumentWebhookPayload, DocumentWebhookEmitter } from '../queue/document-webhooks';
 import { DocumentActionQueueDispatcher } from '../queue/queue.constants';
+import { reportOnDocumentEvent } from '../reporting/on-document-event';
 import { reportPaymentIfObligated } from '../reporting/report-payment';
 import { computeSettlement, describeSettlement } from '../settlement/compute-settlement';
 import { resolvePaymentConversion } from '../settlement/convert-payment';
@@ -630,10 +632,7 @@ function registerInvoiceSaveDraftAction(registry: ActionRegistry, webhooks?: Doc
     // Same message `documents.service.ts#runAction` throws for the exact same reason - see this
     // function's own header for why this can only ever fire if a caller skipped `runAction`.
     if (ctx.documentId && ctx.currentStatus && ctx.currentStatus !== 'draft') {
-      throw new ConflictException(
-        `Action "save-draft" of document type "invoice" is refused once the document has left draft ` +
-          `(status "${ctx.currentStatus}"): an issued document is never rewritten.`,
-      );
+      throw lockedStatusConflict('save-draft', 'invoice', ctx.currentStatus);
     }
     return performSaveDraft(
       ctx.companyId,
@@ -917,6 +916,16 @@ export function registerInvoiceActions(registry: ActionRegistry, deps: InvoiceAc
         if (INVOICE_DECREMENTS_STOCK) {
           await applyStockOnIssuance(companyId, document);
         }
+        // Issue #768: validating issues the invoice, so the declarations its issuance makes due
+        // (Portugal's AT communication) are enqueued now, not left for a send that may never come.
+        // Never throws; a later send fires the same obligation again and the runner declares once.
+        await reportOnDocumentEvent({
+          event: 'issued',
+          companyId,
+          typeId: 'invoice',
+          documentId,
+          queueDispatcher: deps.queueDispatcher,
+        });
       }
       return { document, changed: true, message: 'Validated.' };
     },

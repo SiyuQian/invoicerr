@@ -38,6 +38,7 @@
  * transport or by a poller (`conformity/authority-status-poller.ts`'s own header: "sdi" registers
  * none, deliberately).
  */
+import { SDI_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -45,6 +46,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 import prisma from '@/prisma/prisma.service';
 
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
@@ -110,7 +112,7 @@ export interface SdiTransportDeps {
   httpPort?: SdiHttpPort;
 }
 
-const PROVIDER_ID = 'sdi';
+const PROVIDER_ID = SDI_PROVIDER_ID;
 
 const INVOICE_DESCRIPTOR = buildInvoiceDescriptor();
 
@@ -147,8 +149,12 @@ async function requireConnectedSdi(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<SdiCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, PROVIDER_ID);
-  const credentials = resolved && extractSdiCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    PROVIDER_ID,
+    extractSdiCredentials,
+  );
   if (!credentials) {
     logger.warn('SdI transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',

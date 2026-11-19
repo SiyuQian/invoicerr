@@ -50,6 +50,7 @@
  * hard-success contract (documentation/docs/developer-guide/live-testing.md): a reference nobody can
  * look up is not a reference at all.
  */
+import { IOPOLE_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -57,6 +58,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 import prisma from '@/prisma/prisma.service';
 
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
@@ -107,7 +109,7 @@ export interface IopoleTransportDeps {
   facturxFormatProvider: DocumentFormatProvider;
 }
 
-export const IOPOLE_PROVIDER_ID = 'iopole';
+export { IOPOLE_PROVIDER_ID };
 
 /** Same "the invoice's OWN base descriptor, module-level constant" choice every sibling transport
  *  makes for the identical reason - see `superpdp-transport.ts`'s own header. */
@@ -170,8 +172,12 @@ async function requireConnectedIopole(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<IopoleCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, IOPOLE_PROVIDER_ID);
-  const credentials = resolved && extractIopoleCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    IOPOLE_PROVIDER_ID,
+    extractIopoleCredentials,
+  );
   if (!credentials) {
     logger.warn('Iopole transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',

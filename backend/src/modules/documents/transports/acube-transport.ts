@@ -91,6 +91,7 @@
  * `AcubeJurisdiction` plus `JURISDICTION_HOSTS` in the client, so reaching that access point later is
  * a host-table row and a format choice, never a second authentication design.
  */
+import { ACUBE_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -98,6 +99,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 import prisma from '@/prisma/prisma.service';
 
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
@@ -147,7 +149,7 @@ export interface AcubeTransportDeps {
   clientFactory?: (credentials: AcubeCredentials) => Pick<AcubeClient, 'sendInvoice' | 'getBaseUrl'>;
 }
 
-const PROVIDER_ID = 'acube';
+const PROVIDER_ID = ACUBE_PROVIDER_ID;
 
 /** Same "the invoice's OWN base descriptor, module-level constant" choice `superpdp-transport.ts` makes
  *  for the identical reason: this transport is reached ONLY through `invoiceTransportId`, so it is
@@ -178,8 +180,12 @@ async function requireConnectedAcube(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<AcubeCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, PROVIDER_ID);
-  const credentials = resolved && extractAcubeCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    PROVIDER_ID,
+    extractAcubeCredentials,
+  );
   if (!credentials) {
     logger.warn('A-Cube transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',

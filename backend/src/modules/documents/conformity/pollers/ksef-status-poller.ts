@@ -54,24 +54,23 @@
  * access token minted under the credential that was just REPLACED, for as long as that token's own
  * TTL allows, silently outliving the very rotation meant to end its use.
  */
+import { KSEF_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { createHash } from 'node:crypto';
 
-import {
-  ChannelCredentialsService,
-  ResolvedChannelConfig,
-} from '@/modules/company/channels/channels.service';
+import { ChannelCredentialsService } from '@/modules/company/channels/channels.service';
 
 import { authenticate, extractKsefCredentials, KsefCredentials } from '../../transports/ksef-transport';
 import { FetchKsefHttpClient } from '../../transports/ksef/fetch-http-client';
 import { InvoiceStatusResponse, KsefClient } from '../../transports/ksef/ksef-client';
 import { loadVendorizedKeys } from '../../transports/ksef/ksef-public-keys';
+import { resolveChannelCredentials } from '../../transports/resolve-channel-credentials';
 import {
   AuthorityStatusPoller,
   ChannelNotConnectedError,
   RawAuthorityEvent,
 } from '../authority-status-poller';
 
-export const KSEF_PROVIDER_ID = 'ksef';
+export { KSEF_PROVIDER_ID };
 
 /** Refreshed this far ahead of the cached token's own `expiresAt` — the identical 60s safety margin
  *  `transports/superpdp/superpdp-client.ts`'s own token cache already applies, so a token technically still
@@ -180,11 +179,12 @@ async function resolveKsefCredentials(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<KsefCredentials> {
-  const resolved: ResolvedChannelConfig | null = await channelCredentials.resolveActive(
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
     companyId,
     KSEF_PROVIDER_ID,
+    extractKsefCredentials,
   );
-  const credentials = resolved && extractKsefCredentials(resolved);
   if (!credentials) throw new ChannelNotConnectedError(KSEF_PROVIDER_ID);
   return credentials;
 }

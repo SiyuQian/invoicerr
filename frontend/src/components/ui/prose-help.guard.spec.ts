@@ -20,8 +20,6 @@ const KEPT_VISIBLE = new Set([
   // each server explanation is disclosed by the existing ProseHelp component.
   "pages/(app)/project-reconciliation/_components/read-parts.tsx|warnings.map(",
   "components/documents/mark-quote-accepted-dialog.tsx|documents.acceptance.dialogWarning",
-  "pages/(app)/settings/_components/billing.settings.tsx|settings.billing.billingEmail.noneOnFileNotice",
-  "pages/(app)/settings/_components/billing.settings.tsx|settings.billing.refundNotice.prefix",
   "pages/(app)/settings/_components/danger.settings.tsx|settings.dangerZone.resetCompanyData.detail",
   "pages/(app)/settings/_components/danger.settings.tsx|settings.dangerZone.resetCompanyData.countsSummary",
   "pages/(app)/settings/_components/danger.settings.tsx|settings.dangerZone.deleteCompany.detail",

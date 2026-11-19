@@ -1,4 +1,5 @@
 import { formatOtp } from "@/lib/format"
+import { isOtpComplete, isOtpLockedError, OTP_DISPLAY_LENGTH } from "@/lib/otp"
 import { AlertTriangle, Lock, RotateCcw, Trash2 } from "lucide-react"
 import type React from "react"
 import { useMemo, useState } from "react"
@@ -47,15 +48,6 @@ interface CompanyDataResetPreflight {
     bankStatements: number
     archives: number
   }
-}
-
-/** The confirm step's own OTP failures stay deliberately generic no matter the cause (wrong code,
- *  expired, or already locked — the backend folds all three into the same message on purpose, so a
- *  caller here can never narrow down a guess). The ONE outcome the backend does surface distinctly is
- *  the permanent lockout on the REQUEST step itself (five failed confirmations, for good) — matched on
- *  the response text since that refusal carries no separate error code, only this one stable phrase. */
-function isOtpLockedError(error: unknown): boolean {
-  return error instanceof Error && /locked/i.test(error.message)
 }
 
 export default function DangerZoneSettings() {
@@ -175,7 +167,7 @@ export default function DangerZoneSettings() {
     setOtp(formatOtp(e.target.value))
   }
 
-  const canConfirm = otp.length === 9 && confirmText === confirmKeyword
+  const canConfirm = isOtpComplete(otp) && confirmText === confirmKeyword
   const resetBlocked = preflight?.blocked ?? false
   const retentionDate = preflight?.retentionUntil
     ? new Date(preflight.retentionUntil).toLocaleDateString()
@@ -322,7 +314,7 @@ export default function DangerZoneSettings() {
                 onChange={handleOtpChange}
                 placeholder={t("settings.dangerZone.modal.otpPlaceholder")}
                 className="text-center text-lg font-mono tracking-wider"
-                maxLength={9}
+                maxLength={OTP_DISPLAY_LENGTH}
                 data-cy="danger-otp-input"
               />
             </div>

@@ -44,6 +44,7 @@
  * contract every transport in this directory enforces ("accepted with no usable reference is a
  * failure") without pretending to know an `IdentificativoSdI` that does not exist yet.
  */
+import { SDI_PEC_PROVIDER_ID } from '@/modules/documents/transports/provider-ids';
 import { BadRequestException, NotImplementedException } from '@nestjs/common';
 
 import { logger } from '@/logger/logger.service';
@@ -52,6 +53,7 @@ import {
   ChannelCredentialsService,
   ResolvedChannelConfig,
 } from '@/modules/company/channels/channels.service';
+import { resolveChannelCredentials } from './resolve-channel-credentials';
 import prisma from '@/prisma/prisma.service';
 
 import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
@@ -152,7 +154,7 @@ export interface SdiPecTransportDeps {
   mailService: MailService;
 }
 
-export const SDI_PEC_PROVIDER_ID = 'sdi-pec';
+export { SDI_PEC_PROVIDER_ID };
 
 const INVOICE_DESCRIPTOR = buildInvoiceDescriptor();
 
@@ -207,8 +209,12 @@ async function requireConnectedSdiPec(
   channelCredentials: ChannelCredentialsService,
   companyId: string,
 ): Promise<SdiPecCredentials> {
-  const resolved = await channelCredentials.resolveActive(companyId, SDI_PEC_PROVIDER_ID);
-  const credentials = resolved && extractSdiPecCredentials(resolved);
+  const credentials = await resolveChannelCredentials(
+    channelCredentials,
+    companyId,
+    SDI_PEC_PROVIDER_ID,
+    extractSdiPecCredentials,
+  );
   if (!credentials) {
     logger.warn('SdI-via-PEC transport blocked: channel not connected (or incomplete config)', {
       category: 'documents',
@@ -316,7 +322,7 @@ export function buildSdiPecTransport(deps: SdiPecTransportDeps): DocumentTranspo
           category: 'documents',
           details: { companyId: ctx.companyId, filename, recipient },
         });
-        await deps.mailService.sendMail(
+        await deps.mailService.sendViaTenantSmtp(
           {
             to: recipient,
             subject: `Fattura elettronica — ${filename}`,
