@@ -1,0 +1,28 @@
+name: Notify after merge
+
+on:
+  pull_request_target:
+    branches: [next]
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    if: github.repository == 'SiyuQian/invoicerr' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: merge-notification
+    steps:
+      # The target event supplies secrets for fork PRs. Never check out PR code here.
+      - name: Dispatch the merged revision
+        env:
+          DISPATCH_ENDPOINT: ${{ secrets.MERGE_DISPATCH_ENDPOINT }}
+          GH_TOKEN: ${{ secrets.MERGE_DISPATCH_TOKEN }}
+          SOURCE_REVISION: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          [[ "$SOURCE_REVISION" =~ ^[a-f0-9]{40}$ ]]
+          : "${DISPATCH_ENDPOINT:?Missing dispatch endpoint}" "${GH_TOKEN:?Missing dispatch token}"
+          jq -n --arg revision "$SOURCE_REVISION" \
+            '{ref: "main", inputs: {source_revision: $revision, promote: "true"}}' |
+            gh api --silent --method POST "$DISPATCH_ENDPOINT" --input -
