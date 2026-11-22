@@ -1,9 +1,10 @@
 import { useEffect } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
-import { useSse } from "./use-fetch"
-import { useCompanies } from "./queries/use-companies"
 import { queryKeys } from "@/lib/query-keys"
+
+import { useCompanies } from "./queries/use-companies"
+import { useSse } from "./use-fetch"
 
 /**
  * Mirrors the backend's own `DocumentEventMessage` (queue/document-events.ts) — deliberately THIN,
@@ -62,7 +63,7 @@ export function useDocumentEventsSse(): void {
     // implementation and documents.controller.ts's own `streamEvents` header), so `data` is either
     // absent or a genuine DocumentEventMessage, never a heartbeat mistaken for one.
     if (!data) return
-    queryClient.invalidateQueries({ queryKey: ["documents", data.typeId] })
+    queryClient.invalidateQueries({ queryKey: queryKeys.documents.byType(data.typeId) })
     if (activeCompanyId && ["invoice", "credit-note", "expense", "received-invoice"].includes(data.typeId))
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReconciliation.all(activeCompanyId) })
     // A declarative-reporting outcome (`report:blocked`/`report:failed`, or a real provider verdict —
@@ -72,7 +73,7 @@ export function useDocumentEventsSse(): void {
     // `["declarations", ...]`, never nested under `["documents", typeId]` (it spans every document
     // type at once), so it needs its OWN invalidation here rather than riding the one above for free.
     if (data.kind === "authority-event") {
-      queryClient.invalidateQueries({ queryKey: ["declarations"] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.declarations.all() })
     }
   }, [data, queryClient, activeCompanyId])
 }

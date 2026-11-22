@@ -41,8 +41,28 @@ export const queryKeys = {
       ["timeEntries", "list", filters] as const,
     listsAll: () => ["timeEntries", "list"] as const,
   },
+  // Everything document-instance-related hangs under `["documents"]`: `all()` is the prefix every
+  // document action invalidates (use-document-types.ts's `useRunDocumentAction`), `byType` the one a
+  // live document event invalidates (use-document-events-sse.ts).
+  documents: {
+    all: () => ["documents"] as const,
+    byType: (typeId: string | undefined) => ["documents", typeId] as const,
+    list: <F>(typeId: string | undefined, filters: F) => ["documents", typeId, filters] as const,
+    instance: (typeId: string | undefined, id: string | undefined) => ["documents", typeId, id] as const,
+    instanceSub: <S extends string>(typeId: string | undefined, id: string | undefined, sub: S) =>
+      ["documents", typeId, id, sub] as const,
+    transmissionPreview: (typeId: string | undefined, id: string | undefined, actionId: string | undefined) =>
+      ["documents", typeId, id, "actions", actionId, "transmission-preview"] as const,
+  },
   documentReferences: {
     entity: (entity: string) => ["document-references", entity] as const,
+    // Shared by the single- and multi-entity searches so both read the same cache entry.
+    search: (entity: string | undefined, query: string) =>
+      ["document-references", entity, "search", query] as const,
+    byId: (entity: string | undefined, id: string | undefined) =>
+      ["document-references", entity, id] as const,
+    fields: (entity: string | undefined, id: string | undefined) =>
+      ["document-references", entity, id, "fields"] as const,
   },
   bankStatements: {
     list: () => ["bankStatements", "list"] as const,
@@ -55,11 +75,13 @@ export const queryKeys = {
     paymentTerms: () => ["company", "paymentTerms"] as const,
   },
   billing: {
+    all: () => ["billing"] as const,
     status: () => ["billing", "status"] as const,
     seats: () => ["billing", "seats"] as const,
     stripeSubscription: (companyId: string | null) => ["billing", "stripe-subscription", companyId] as const,
   },
   declarations: {
+    all: () => ["declarations"] as const,
     list: (page: number, status?: string) => ["declarations", "list", page, status] as const,
   },
   legal: {

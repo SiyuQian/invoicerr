@@ -2,7 +2,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { MemoryRouter } from "react-router"
 import { afterEach, expect, it, vi } from "vitest"
-import OnBoarding from "./onboarding"
+import { OnboardingDialogHost, OnboardingDialogProvider, useOnboardingDialog } from "./onboarding"
+
+function OpenOnboardingButton() {
+  const { setOpen } = useOnboardingDialog()
+  return (
+    <button type="button" onClick={() => setOpen(true)}>
+      Open company wizard
+    </button>
+  )
+}
 
 const clients: QueryClient[] = []
 const originalScrollIntoView = Element.prototype.scrollIntoView
@@ -64,10 +73,14 @@ it("creates an NZ company in NZD without GST registration or an NZBN", async () 
   render(
     <QueryClientProvider client={client}>
       <MemoryRouter>
-        <OnBoarding />
+        <OnboardingDialogProvider>
+          <OpenOnboardingButton />
+          <OnboardingDialogHost />
+        </OnboardingDialogProvider>
       </MemoryRouter>
     </QueryClientProvider>,
   )
+  fireEvent.click(screen.getByRole("button", { name: "Open company wizard" }))
   fireEvent.click(within(screen.getByTestId("onboarding-company-country-input")).getByRole("button"))
   fireEvent.click(await screen.findByRole("option", { name: "New Zealand" }))
   fireEvent.click(screen.getByTestId("onboarding-country-next-btn"))

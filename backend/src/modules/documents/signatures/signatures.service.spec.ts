@@ -13,7 +13,8 @@ import * as archiveStorage from '../archive/storage';
 import * as persistence from '../persistence';
 import { createESignatureAcceptanceArchive } from '../archive/persistence';
 import { hashSignatureToken } from './signature-token';
-import { DOCUMENT_CHANGED_CODE, hashDocumentData } from './signed-version';
+import { hashDocumentData } from '../archive/document-data-hash';
+import { DOCUMENT_CHANGED_CODE } from './signed-version';
 import { MAX_FAILED_ATTEMPTS, MAX_OTP_MINTS, OTP_WINDOW_MS } from './otp';
 import { SignaturesService } from './signatures.service';
 
@@ -531,12 +532,7 @@ describe('SignaturesService', () => {
         'quote',
         'quote-1',
         'signed',
-        null,
-        undefined,
-        undefined,
-        ['sent'],
-        undefined,
-        SENT_QUOTE.updatedAt,
+        { fromStatuses: ['sent'], knownUpdatedAt: SENT_QUOTE.updatedAt },
       );
       expect(rows()[0].signedAt).not.toBeNull();
       expect(rows()[0].isActive).toBe(false); // a signed row can never be replayed
@@ -645,12 +641,7 @@ describe('SignaturesService', () => {
           'quote',
           'quote-1',
           'signed',
-          null,
-          undefined,
-          undefined,
-          ['sent'],
-          'Premium',
-          MULTI_OPTION_QUOTE.updatedAt,
+          { fromStatuses: ['sent'], acceptedOption: 'Premium', knownUpdatedAt: MULTI_OPTION_QUOTE.updatedAt },
         );
         expect(rows()[0].chosenOption).toBe('Premium');
         // Issue #477 - the WORM record names the bound version, with the chosen option frozen.

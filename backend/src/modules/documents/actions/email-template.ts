@@ -2,18 +2,15 @@
 // esModuleInterop in this project's tsconfig, and sanitize-html is `export =`).
 import sanitizeHtml = require('sanitize-html');
 
+import { escapeHtml } from '@/mail/escape-html';
 import { mailT } from '@/mail/i18n';
 import { EMAIL_NON_TEXT_TAGS } from '@/mail/sanitize-email-html';
 import { decimalsFor, fromMinor } from '@/utils/financial';
 
-import {
-  DocumentEmailTemplate,
-  DocumentFieldDescriptor,
-  DocumentTypeDescriptor,
-  findShareLinkAction,
-} from '../descriptors/types';
+import { DocumentEmailTemplate, DocumentTypeDescriptor, findShareLinkAction } from '../descriptors/types';
 import { DEFAULT_RENDER_LANGUAGE, RenderLanguage } from '../rendering/language/supported-languages';
 import { descriptorHasLineTotals, DocumentTotals } from '../totals/compute-totals';
+import { findClientReferenceField } from '../descriptors/recipient-reference';
 
 export type { DocumentEmailTemplate };
 
@@ -52,20 +49,6 @@ function formatEmailDate(value: unknown, language: RenderLanguage): string {
   return Number.isFinite(time)
     ? new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeZone: 'UTC' }).format(time)
     : '';
-}
-
-/** Escapes a SUBSTITUTED VALUE on its way into the html part — never the template's own markup, which
- *  is filtered at write time instead (`mail/sanitize-email-html.ts`). Without this, a company name or
- *  a client name containing `<` would be interpreted as markup by the recipient's mail client: the
- *  template is trusted-and-filtered, the values interpolated into it are neither. The TEXT part is
- *  deliberately left unescaped — `&` is an ampersand there, not an entity. */
-function escapeHtmlValue(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 /**
@@ -173,7 +156,7 @@ export function deriveTextFromHtml(html: string): string {
  * ## The two parts
  *
  * The text parts (`subject`, `body`) get the raw values; the `html` part gets HTML-ESCAPED values (see
- * `escapeHtmlValue`), so a value that happens to contain markup is read as the text it is. Warnings are
+ * `escapeHtml` below), so a value that happens to contain markup is read as the text it is. Warnings are
  * collected across all three and still reported once per DISTINCT unknown key, never once per part.
  *
  * A template with an `html` part and a blank `body` yields a DERIVED text part (`deriveTextFromHtml`,
@@ -199,7 +182,13 @@ export function renderEmailTemplate(
   const asIs = (value: string): string => value;
   const subject = interpolate(template.subject, asIs);
   const body = interpolate(template.body, asIs);
-  const html = template.html ? interpolate(template.html, escapeHtmlValue) : undefined;
+  // Escapes each SUBSTITUTED VALUE on its way into the html part (`mail/escape-html.ts`, the rule every
+  // sender shares) - never the template's own markup, which is filtered at write time instead
+  // (`mail/sanitize-email-html.ts`). Without this, a company name or a client name containing `<` would
+  // be interpreted as markup by the recipient's mail client: the template is trusted-and-filtered, the
+  // values interpolated into it are neither. The TEXT part is deliberately left unescaped - `&` is an
+  // ampersand there, not an entity.
+  const html = template.html ? interpolate(template.html, escapeHtml) : undefined;
   const warnings = [...unknown].map((key) => `Unknown email template placeholder "{${key}}" left as-is.`);
 
   const textPart = body.trim() === '' && html ? deriveTextFromHtml(html) : body;
@@ -325,47 +314,8 @@ function formatEmailAmount(minor: number, currency: string | null): string {
   return code ? `${amount} ${code}` : amount;
 }
 
-/**
- * The two EntityReferenceRegistry entities that count as "the recipient this document type
- * addresses" — both back onto the SAME `Client` table under two different search scopes
- * (`client-reference.provider.ts`'s own header): "client" for an outbound document's billable party
- * (the quote's/invoice's own field), "supplier" for one addressed to a supplier
- * (`received-invoice.descriptor.ts`'s own `supplierClient`, and `purchase-order.descriptor.ts`'s own
- * `supplier` — the first type in this trunk that actually SENDS to one). A `{recipientName}`/
- * recipient-language lookup means the identical thing for either: resolve the referenced Client's own
- * label/language. Kept as a closed set of ENTITY ids, never a `typeId` branch — the same "never key
- * off which document type this is" discipline every other generic mechanism in this module already
- * holds (see e.g. `stock/apply-stock-on-issuance.ts`'s own header for the identical argument made for
- * a different concern).
- */
-const RECIPIENT_REFERENCE_ENTITIES = new Set(['client', 'supplier']);
-
-/**
- * The 'reference' field this type uses to point at one of `RECIPIENT_REFERENCE_ENTITIES` above, if it
- * has one — the SINGLE source of the `{recipientName}` presence rule, shared by
- * `buildEmailTemplateParts` (which fills the value in for a real send) and
- * `describeDocumentEmailVocabulary` (which advertises the key to an editor). Exported so
- * `rendering/render-instance-pdf.ts` can reuse the exact same rule a THIRD time, to find the
- * document's own recipient id for recipient-language resolution
- * (`rendering/language/resolve-recipient-language.ts`) — one rule, three readers, so a type can never
- * be offered a placeholder the send would then treat as unknown, and can never have its language
- * resolved from a field this module wouldn't otherwise recognize as "the recipient".
- *
- * Widening this from "client" only to also "supplier" (purchase orders & goods receipts, "bons de
- * commande") has one small,
- * accepted side effect: `received-invoice`'s own settings-screen email-template preview now also
- * advertises `{recipientName}` as an available placeholder, even though that type never actually
- * sends anything (`received-invoice.descriptor.ts` declares no `email` at all) — harmless, since a
- * placeholder nothing ever substitutes is simply never reached, and keying this by ENTITY rather than
- * by `typeId` is what keeps this rule generic for the type that DOES need it (purchase-order).
- */
-export function findClientReferenceField(
-  descriptor: DocumentTypeDescriptor,
-): DocumentFieldDescriptor | undefined {
-  return descriptor.fields.find(
-    (field) => field.kind === 'reference' && !!field.entity && RECIPIENT_REFERENCE_ENTITIES.has(field.entity),
-  );
-}
+// Moved to `descriptors/recipient-reference.ts`; re-exported for existing callers.
+export { findClientReferenceField } from '../descriptors/recipient-reference';
 
 /**
  * The fixed vocabulary `renderEmailTemplate` fills in for a document SEND — `displayNumber`,

@@ -2,12 +2,12 @@ import { WebhookEvent } from '../../../../prisma/generated/prisma/client';
 
 import { ClientsService } from '@/modules/clients/clients.service';
 import { MailService } from '@/mail/mail.service';
-import { logger } from '@/logger/logger.service';
 
 import { DocumentTypeRegistry } from '../descriptors/type-registry';
 import { updateDocumentStatus } from '../persistence';
 import { DocumentEventPublisher } from '../queue/document-events';
-import { buildDocumentWebhookPayload, DocumentWebhookEmitter } from '../queue/document-webhooks';
+import { DocumentWebhookEmitter } from '../queue/document-webhooks';
+import { dispatchDocumentWebhookSafely } from '../queue/dispatch-document-webhook';
 import { DocumentActionQueueDispatcher } from '../queue/queue.constants';
 import { EntityReferenceRegistry } from '../references/reference-registry';
 import { SigningCredentialsPort } from '../signing/signing-credentials-port';
@@ -19,6 +19,7 @@ import {
   registerSaveDraftAction,
 } from './generic-actions';
 import { sendDocumentInstanceEmail } from './send-document-email';
+import { PURCHASE_ORDER_CANCELLABLE_FROM } from '../descriptors/purchase-order.descriptor';
 
 export interface PurchaseOrderActionDeps {
   clientsService: ClientsService;
@@ -106,38 +107,22 @@ export function registerPurchaseOrderActions(registry: ActionRegistry, deps: Pur
     // "cancel-order" calls (or a double-click) would otherwise both pass the earlier country-policy
     // read and both flip the status, the second one dispatching a spurious second
     // DOCUMENT_CANCELLED. The compare-and-swap turns that second write into a named 409 instead.
-    const document = await updateDocumentStatus(
+    const document = await updateDocumentStatus(companyId, 'purchase-order', documentId, 'cancelled', {
+      fromStatuses: PURCHASE_ORDER_CANCELLABLE_FROM,
+    });
+
+    await dispatchDocumentWebhookSafely(
+      deps.webhooks,
+      WebhookEvent.DOCUMENT_CANCELLED,
       companyId,
       'purchase-order',
-      documentId,
-      'cancelled',
-      null,
-      undefined,
-      undefined,
-      ['sent', 'send_failed'],
-    );
-
-    if (deps.webhooks) {
-      try {
-        await deps.webhooks.dispatch(
-          WebhookEvent.DOCUMENT_CANCELLED,
-          buildDocumentWebhookPayload(companyId, 'purchase-order', document),
-        );
-      } catch (error) {
-        logger.error(
+      document,
+      {
+        failureMessage:
           'Failed to dispatch a DOCUMENT_CANCELLED webhook — the purchase order was still cancelled',
-          {
-            category: 'documents',
-            details: {
-              companyId,
-              typeId: 'purchase-order',
-              documentId,
-              message: error instanceof Error ? error.message : String(error),
-            },
-          },
-        );
-      }
-    }
+        documentId,
+      },
+    );
 
     return { document, changed: true, message: 'Cancelled.' };
   });
