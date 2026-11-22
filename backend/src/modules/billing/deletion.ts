@@ -48,16 +48,16 @@
  * while Stripe keeps charging it.
  */
 import prisma from '@/prisma/prisma.service';
-import { purgeReconciliationForCompany } from '@/modules/project-reconciliation/persistence';
 import { sessionCache } from '@/lib/session-cache';
 import { companyMemberIds } from '@/modules/company/company-member-ids';
+import { purgeReconciliationForCompany } from '@/modules/project-reconciliation/persistence';
 
 import {
   drainStorageErasureJournal,
   journalCompanyStorageObjects,
 } from '@/modules/documents/archive/company-storage-erasure';
 
-import { CompanySubscriptionStatus } from '../../../prisma/generated/prisma/client';
+import { CompanySubscriptionStatus, Prisma } from '../../../prisma/generated/prisma/client';
 import { cancelCompanyStripeSubscriptions } from './stripe-subscription-cancel';
 
 /** `true` only when the row, as just read, is STILL actually due for deletion, `null`/`undefined`
@@ -74,6 +74,17 @@ function isStillDueForDeletion(
     sub.deletionDueAt !== null &&
     sub.deletionDueAt.getTime() <= now.getTime()
   );
+}
+
+/** Inventories the company's stored bytes, then deletes its rows. `Webhook` goes explicitly before
+ *  `Company` (see this file's header). Returns the member ids, for the session cache. */
+async function deleteCompanyRowsInTx(tx: Prisma.TransactionClient, companyId: string): Promise<string[]> {
+  await journalCompanyStorageObjects(tx, companyId);
+  await tx.webhook.deleteMany({ where: { companyId } });
+  const memberIds = await companyMemberIds(tx, companyId);
+  await purgeReconciliationForCompany(tx, companyId);
+  await tx.company.delete({ where: { id: companyId } });
+  return memberIds;
 }
 
 /**
@@ -103,12 +114,7 @@ export async function deleteCompanyPermanently(companyId: string, now: Date = ne
     if (!isStillDueForDeletion(fresh, now)) return null;
 
     // Journal only after the guard, or the drain could erase a live company's archives.
-    await journalCompanyStorageObjects(tx, companyId);
-    await tx.webhook.deleteMany({ where: { companyId } });
-    const memberIds = await companyMemberIds(tx, companyId);
-    await purgeReconciliationForCompany(tx, companyId);
-    await tx.company.delete({ where: { id: companyId } });
-    return memberIds;
+    return deleteCompanyRowsInTx(tx, companyId);
   });
 
   // Drain only after commit: object storage has no rollback. Never throws.
@@ -137,14 +143,7 @@ export async function deleteCompanyPermanentlyNow(companyId: string): Promise<vo
   // touched, so "nothing was deleted" stays true for the caller.
   await cancelCompanyStripeSubscriptions(companyId);
 
-  const members = await prisma.$transaction(async (tx) => {
-    await journalCompanyStorageObjects(tx, companyId);
-    await tx.webhook.deleteMany({ where: { companyId } });
-    const memberIds = await companyMemberIds(tx, companyId);
-    await purgeReconciliationForCompany(tx, companyId);
-    await tx.company.delete({ where: { id: companyId } });
-    return memberIds;
-  });
+  const members = await prisma.$transaction((tx) => deleteCompanyRowsInTx(tx, companyId));
 
   await sessionCache.invalidateUsers(members);
   // Must not throw: callers report "nothing was deleted" on error, which would be false by now.

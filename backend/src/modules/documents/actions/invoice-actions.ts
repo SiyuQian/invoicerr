@@ -18,13 +18,14 @@ import {
 } from '../country-policy/country-policy';
 import { resolveInvoiceValidationTransmission } from '../country-policy/invoice-validation-transmission';
 import { runDomesticInvoiceCurrencyPreflight } from '../country-policy/domestic-currency-issuance';
-import { buildInvoiceDescriptor } from '../descriptors/invoice.descriptor';
+import { buildInvoiceDescriptor, INVOICE_CANCELLABLE_FROM } from '../descriptors/invoice.descriptor';
 import { lockedStatusConflict } from '../descriptors/lifecycle';
 import { stripSidecarKeys } from '../descriptors/validate';
 import { takeDocumentNumberForTransitionWithStatus } from '../numbering/take-number';
 import { findOwnedDocument, updateDocumentStatus } from '../persistence';
 import { DocumentEventPublisher } from '../queue/document-events';
-import { buildDocumentWebhookPayload, DocumentWebhookEmitter } from '../queue/document-webhooks';
+import { DocumentWebhookEmitter } from '../queue/document-webhooks';
+import { dispatchDocumentWebhookSafely } from '../queue/dispatch-document-webhook';
 import { DocumentActionQueueDispatcher } from '../queue/queue.constants';
 import { reportOnDocumentEvent } from '../reporting/on-document-event';
 import { reportPaymentIfObligated } from '../reporting/report-payment';
@@ -989,35 +990,21 @@ export function registerInvoiceActions(registry: ActionRegistry, deps: InvoiceAc
     // otherwise both read "sent", both pass the gate, and both write "cancelled" — a second, spurious
     // DOCUMENT_CANCELLED webhook for a cancellation that already happened. Compare-and-swap turns the
     // loser into a named 409 instead, before it ever reaches the webhook dispatch below.
-    const document = await updateDocumentStatus(
+    const document = await updateDocumentStatus(companyId, 'invoice', documentId, 'cancelled', {
+      fromStatuses: INVOICE_CANCELLABLE_FROM,
+    });
+
+    await dispatchDocumentWebhookSafely(
+      deps.webhooks,
+      WebhookEvent.DOCUMENT_CANCELLED,
       companyId,
       'invoice',
-      documentId,
-      'cancelled',
-      null,
-      undefined,
-      undefined,
-      ['sent', 'send_failed'],
+      document,
+      {
+        failureMessage: 'Failed to dispatch a DOCUMENT_CANCELLED webhook — the invoice was still cancelled',
+        documentId,
+      },
     );
-
-    if (deps.webhooks) {
-      try {
-        await deps.webhooks.dispatch(
-          WebhookEvent.DOCUMENT_CANCELLED,
-          buildDocumentWebhookPayload(companyId, 'invoice', document),
-        );
-      } catch (error) {
-        logger.error('Failed to dispatch a DOCUMENT_CANCELLED webhook — the invoice was still cancelled', {
-          category: 'documents',
-          details: {
-            companyId,
-            typeId: 'invoice',
-            documentId,
-            message: error instanceof Error ? error.message : String(error),
-          },
-        });
-      }
-    }
 
     return { document, changed: true, message: 'Cancelled.' };
   });

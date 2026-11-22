@@ -1,5 +1,5 @@
-import { formatOtp, formatShortDate } from "@/lib/format"
-import { isOtpComplete, OTP_DISPLAY_LENGTH } from "@/lib/otp"
+import { formatShortDate } from "@/lib/format"
+import { formatOtp, isOtpComplete, OTP_DISPLAY_LENGTH } from "@/lib/otp"
 import { AlertTriangle, ArrowRightLeft } from "lucide-react"
 import type React from "react"
 import { useState } from "react"
@@ -27,7 +27,7 @@ import {
   useInitiateTransfer,
   useRequestTransferOtp,
 } from "@/hooks/queries"
-import { SettingsSection } from "./settings-section"
+import { SettingsSection } from "@/components/settings-section"
 
 /**
  * Mounted inside `danger.settings.tsx` (that file's own `{/* transfer-company section mounts here *\/}`

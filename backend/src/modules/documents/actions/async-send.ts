@@ -110,9 +110,11 @@ import {
   upsertDocument,
 } from '../persistence';
 import { DocumentEventPublisher } from '../queue/document-events';
-import { buildDocumentWebhookPayload, DocumentWebhookEmitter } from '../queue/document-webhooks';
+import { DocumentWebhookEmitter } from '../queue/document-webhooks';
+import { dispatchDocumentWebhookSafely } from '../queue/dispatch-document-webhook';
 import { DocumentActionQueueDispatcher } from '../queue/queue.constants';
 import { reportOnSendIfObligated } from '../reporting/report-on-send';
+import { sleep } from '@/lib/sleep';
 
 /**
  * The IN-PROCESS fast path for the double-delivery guard below — a `Set` of
@@ -174,7 +176,7 @@ async function confirmDeliveryWithRetry(
           message: error instanceof Error ? error.message : String(error),
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
+      await sleep(200 * attempt);
     }
   }
 }
@@ -567,7 +569,10 @@ export async function runAsyncSendAction(input: RunAsyncSendInput): Promise<Acti
     const { message, reference, providerId } = delivered;
     let sent: DocumentInstanceResult;
     try {
-      sent = await updateDocumentStatus(companyId, typeId, documentId, 'sent', null, reference, providerId);
+      sent = await updateDocumentStatus(companyId, typeId, documentId, 'sent', {
+        transportRef: reference,
+        channelProviderId: providerId,
+      });
     } finally {
       // Safe to release UNCONDITIONALLY here, success or failure: by this point `deliveryConfirmedAt`
       // is already durably set (either just now, above, or by an earlier attempt this very call
@@ -599,27 +604,10 @@ export async function runAsyncSendAction(input: RunAsyncSendInput): Promise<Acti
     // one call site where "the send genuinely succeeded" must never be undone by a THIRD PARTY's
     // webhook endpoint being down. A named, loud log — never silent — is what "Never silent"
     // (echoing `report-on-send.ts`'s header) means here.
-    if (webhooks) {
-      try {
-        await webhooks.dispatch(
-          WebhookEvent.DOCUMENT_SENT,
-          buildDocumentWebhookPayload(companyId, typeId, sent),
-        );
-      } catch (error) {
-        logger.error(
-          'Failed to dispatch a DOCUMENT_SENT webhook — the document was still sent successfully',
-          {
-            category: 'documents',
-            details: {
-              companyId,
-              typeId,
-              documentId,
-              message: error instanceof Error ? error.message : String(error),
-            },
-          },
-        );
-      }
-    }
+    await dispatchDocumentWebhookSafely(webhooks, WebhookEvent.DOCUMENT_SENT, companyId, typeId, sent, {
+      failureMessage: 'Failed to dispatch a DOCUMENT_SENT webhook — the document was still sent successfully',
+      documentId,
+    });
 
     // Legal archiving now runs EARLIER — right after `confirmDeliveryWithRetry`, before the "sent"
     // write above could ever throw and skip it. See that call site's own comment for why (and this
